@@ -98,7 +98,7 @@ export default async function handler(req, res) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${overall.title} | 2koveralls</title>
+  <title>${overall.title} Overall Rating | 2koveralls</title>
   <meta name="description" content="${description}">
   <link rel="canonical" href="${url}">
 

@@ -7,241 +7,252 @@ import SpotifyEmbed from '../components/SpotifyEmbed';
 import HilltopMultiBanner from '../components/HilltopMultiBanner';
 import HilltopMobileBanner from '../components/HilltopMobileBanner';
 import Footer from '../components/Footer';
+import OverallCard from '../components/OverallCard';
+import ArticleCard from '../components/ArticleCard';
+import MovementBadge from '../components/MovementBadge';
+import TierBadge from '../components/TierBadge';
+import RatingHistoryChart from '../components/RatingHistoryChart';
 import { stripMarkdown } from '../utils/markdownUtils';
+import { generateNewsUrl } from '../utils/slugify';
 
 function OverallDetail() {
   const { slug } = useParams();
   const [overall, setOverall] = useState(null);
-  const [moreOveralls, setMoreOveralls] = useState([]);
+  const [history, setHistory] = useState(null);
+  const [related, setRelated] = useState({ articles: [], artists: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    fetchOverall();
-    fetchMoreOveralls();
-  }, [slug]);
+    let cancelled = false;
+    setLoading(true);
+    setError('');
 
-  const fetchOverall = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/overalls/slug/${slug}`);
-      if (!response.ok) throw new Error('Overall not found');
-      const data = await response.json();
-      setOverall(data);
-    } catch (error) {
-      setError(error.message);
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchAll = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/overalls/slug/${slug}`);
+        if (!res.ok) throw new Error('Overall not found');
+        const data = await res.json();
+        if (cancelled) return;
+        setOverall(data);
 
-  const fetchMoreOveralls = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/overalls`);
-      if (response.ok) {
-        const data = await response.json();
-        const others = data.filter(o => o.slug !== slug);
-        const shuffled = others.sort(() => 0.5 - Math.random());
-        setMoreOveralls(shuffled.slice(0, 3));
+        const [historyData, relatedData] = await Promise.all([
+          fetch(`${API_URL}/api/overalls/slug/${slug}/history`).then(r => r.json()).catch(() => null),
+          fetch(`${API_URL}/api/overalls/slug/${slug}/related`).then(r => r.json()).catch(() => ({ articles: [], artists: [] })),
+        ]);
+        if (cancelled) return;
+        setHistory(historyData);
+        setRelated(relatedData || { articles: [], artists: [] });
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (err) {
-      console.error('Failed to fetch more overalls:', err);
-    }
-  };
+    };
+
+    fetchAll();
+    return () => { cancelled = true; };
+  }, [slug]);
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-ink">
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-brand" />
       </div>
     );
   }
 
   if (error || !overall) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error || 'Overall not found'}
-        </div>
-        <Link
-          to="/"
-          className="mt-4 inline-block text-indigo-600 hover:text-indigo-800"
-        >
-          ← Back to Home
-        </Link>
+      <div className="mx-auto max-w-4xl px-4 py-12 text-center sm:px-6 lg:px-8">
+        <p className="text-bone">{error || 'Overall not found'}</p>
+        <Link to="/" className="mt-4 inline-block text-brand hover:text-bone">← Back to Home</Link>
       </div>
     );
   }
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const overallDescription = overall ? stripMarkdown(overall.content).substring(0, 160) + '...' : '';
+  const overallDescription = stripMarkdown(overall.content).substring(0, 160) + '...';
   const overallUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const attributes = overall.attributes && typeof overall.attributes === 'object' ? Object.entries(overall.attributes) : [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* SEO Meta Tags */}
+    <div className="min-h-screen bg-ink">
       <Helmet>
-        <title>{overall.title} | 2koveralls</title>
+        <title>{overall.title} Overall Rating | 2koveralls</title>
         <meta name="description" content={overallDescription} />
         <link rel="canonical" href={overallUrl} />
-
-        {/* Open Graph / Facebook */}
         <meta property="og:type" content="article" />
         <meta property="og:url" content={overallUrl} />
-        <meta property="og:title" content={overall.title} />
+        <meta property="og:title" content={`${overall.title} Overall Rating | 2koveralls`} />
         <meta property="og:description" content={overallDescription} />
         {overall.image_url && <meta property="og:image" content={overall.image_url} />}
         <meta property="og:site_name" content="2koveralls" />
         <meta property="article:published_time" content={overall.created_at} />
-
-        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content={overallUrl} />
-        <meta name="twitter:title" content={overall.title} />
+        <meta name="twitter:title" content={`${overall.title} Overall Rating | 2koveralls`} />
         <meta name="twitter:description" content={overallDescription} />
         {overall.image_url && <meta name="twitter:image" content={overall.image_url} />}
       </Helmet>
 
-      {/* Article Header - full width above the content+sidebar flex */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
-        <Link
-          to="/"
-          className="inline-flex items-center text-indigo-600 hover:text-indigo-800 mb-6"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6 lg:px-8">
+        <Link to="/overalls" className="inline-flex items-center text-sm text-bone-dim hover:text-brand">
+          <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Home
+          Back to Overalls
         </Link>
 
         <HilltopMobileBanner />
 
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{overall.title}</h1>
-
-        <p className="text-gray-600 mb-8">Posted on {formatDate(overall.created_at)}</p>
-
-        {overall.instagram_link && (
-          <div className="mb-8">
-            <a
-              href={overall.instagram_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
-            >
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-              </svg>
-              View on Instagram
-            </a>
-          </div>
-        )}
-      </div>
-
-      {/* Content + Sidebar - flex row starts here, level with image */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 flex gap-8 justify-center">
-      <article className="flex-1 min-w-0">
-        {/* Article body — image floats left, text wraps around it */}
-        <div className="mb-8">
-          <img
-            src={overall.image_url}
-            alt={overall.title}
-            className="w-full sm:w-2/5 sm:float-left sm:mr-8 mb-4 rounded-lg shadow-xl"
-          />
-
-          <div className="prose prose-lg max-w-none">
-            <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  h1: ({node, ...props}) => <h1 {...props} className="text-3xl font-bold text-gray-900 mt-8 mb-4 border-b-2 border-orange-500 pb-2" />,
-                  h2: ({node, ...props}) => <h2 {...props} className="text-2xl font-bold text-gray-900 mt-6 mb-3" />,
-                  h3: ({node, ...props}) => <h3 {...props} className="text-xl font-bold text-gray-800 mt-5 mb-2" />,
-                  h4: ({node, ...props}) => <h4 {...props} className="text-lg font-semibold text-gray-800 mt-4 mb-2" />,
-                  p: ({node, ...props}) => <p {...props} className="text-gray-700 leading-relaxed mb-4" />,
-                  a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-600 font-medium underline underline-offset-2" />,
-                  ul: ({node, ...props}) => <ul {...props} className="list-disc pl-6 mb-4 space-y-1 text-gray-700" />,
-                  ol: ({node, ...props}) => <ol {...props} className="list-decimal pl-6 mb-4 space-y-1 text-gray-700" />,
-                  li: ({node, ...props}) => <li {...props} className="leading-relaxed" />,
-                  blockquote: ({node, ...props}) => <blockquote {...props} className="border-l-4 border-orange-500 pl-4 py-1 my-4 italic text-gray-600 bg-orange-50" />,
-                  strong: ({node, ...props}) => <strong {...props} className="font-bold text-gray-900" />,
-                  em: ({node, ...props}) => <em {...props} className="italic text-gray-700" />,
-                  hr: ({node, ...props}) => <hr {...props} className="my-6 border-gray-200" />,
-                  img: ({node, ...props}) => <img {...props} className="w-full rounded-lg my-4 shadow-md" />,
-                  code: ({node, inline, ...props}) => inline
-                    ? <code {...props} className="bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded text-orange-600 text-sm font-mono" />
-                    : <code {...props} className="block bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono my-4" />,
-                  pre: ({node, ...props}) => <pre {...props} className="bg-gray-900 rounded-lg overflow-x-auto my-4" />,
-                }}
-              >
-                {overall.content}
-              </ReactMarkdown>
+        {/* Card + stat row */}
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+          <div className="border border-ink-line bg-ink-soft">
+            <div className="relative aspect-square overflow-hidden">
+              <img src={overall.image_url} alt={overall.title} className="absolute inset-0 h-full w-full object-cover" />
+              {typeof overall.overall === 'number' && (
+                <div className="absolute right-0 top-0 bg-brand px-3 py-1.5 font-display text-3xl leading-none text-ink">
+                  {overall.overall}
+                </div>
+              )}
             </div>
-          <div className="clear-both" />
-        </div>
-
-        {/* Back Button (bottom) */}
-        <div className="mt-12 text-center">
-          <Link
-            to="/"
-            className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            Back to Home
-          </Link>
-        </div>
-      </article>
-
-      {/* Ad Sidebar - desktop only */}
-      <div className="hidden lg:block w-72 flex-shrink-0">
-        <div className="sticky top-24 space-y-4">
-          <HilltopMultiBanner />
-          <div className="overflow-hidden h-[352px]">
-            <SpotifyEmbed pageType="article" />
           </div>
-        </div>
-      </div>
 
-      </div>
+          <div>
+            <h1 className="font-display text-4xl uppercase leading-none text-bone sm:text-5xl">{overall.title}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-bone-dim">
+              {overall.artist_tier && <TierBadge tier={overall.artist_tier} />}
+              {overall.location && <span>{overall.location}</span>}
+              <span>Rated {formatDate(overall.created_at)}</span>
+            </div>
 
-      {/* More Overalls */}
-      {moreOveralls.length > 0 && (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t-2 border-gray-200">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">More Overalls</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {moreOveralls.map((o) => (
-              <Link
-                key={o.id}
-                to={`/overalls/${o.slug}`}
-                className="group bg-white border-2 border-gray-200 hover:border-orange-500 transition-all overflow-hidden"
+            {history && (history.current !== null || history.peak !== null) && (
+              <div className="mt-6 grid grid-cols-2 gap-px border border-ink-line bg-ink-line sm:grid-cols-4">
+                {[
+                  ['Current', history.current],
+                  ['Previous', history.previous],
+                  ['Peak', history.peak],
+                  ['Trend', history.change !== null ? <MovementBadge change={history.change} /> : '—'],
+                ].map(([label, value]) => (
+                  <div key={label} className="bg-ink-soft p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-bone-dim">{label}</p>
+                    <p className="mt-1 font-display text-2xl text-bone">{value ?? '—'}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {overall.instagram_link && (
+              <a
+                href={overall.instagram_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex items-center border border-brand px-4 py-2 text-sm font-bold uppercase tracking-wide text-brand hover:bg-brand hover:text-ink"
               >
-                <div className="relative overflow-hidden aspect-square">
-                  <img
-                    src={o.image_url}
-                    alt={o.title}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    style={{ objectPosition: `${o.crop_x ?? 50}% ${o.crop_y ?? 50}%` }}
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-base font-bold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2">
-                    {o.title}{o.overall ? ` - ${o.overall} Overall` : ''}
-                  </h3>
-                </div>
-              </Link>
-            ))}
+                View on Instagram
+              </a>
+            )}
           </div>
         </div>
-      )}
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-12 lg:flex-row">
+          <div className="min-w-0 flex-1 space-y-12">
+            {/* WHY */}
+            <div>
+              <h2 className="font-display text-2xl uppercase text-bone">Why {overall.overall ?? ''}?</h2>
+              <div className="mt-4 max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({node, ...props}) => <h1 {...props} className="mt-8 mb-4 border-b border-brand pb-2 text-2xl font-bold text-bone" />,
+                    h2: ({node, ...props}) => <h2 {...props} className="mt-6 mb-3 text-xl font-bold text-bone" />,
+                    h3: ({node, ...props}) => <h3 {...props} className="mt-5 mb-2 text-lg font-bold text-bone" />,
+                    p: ({node, ...props}) => <p {...props} className="mb-4 leading-relaxed text-bone-dim" />,
+                    a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="font-medium text-brand underline underline-offset-2" />,
+                    ul: ({node, ...props}) => <ul {...props} className="mb-4 list-disc space-y-1 pl-6 text-bone-dim" />,
+                    ol: ({node, ...props}) => <ol {...props} className="mb-4 list-decimal space-y-1 pl-6 text-bone-dim" />,
+                    blockquote: ({node, ...props}) => <blockquote {...props} className="my-4 border-l-4 border-brand bg-ink-soft py-1 pl-4 italic text-bone-dim" />,
+                    strong: ({node, ...props}) => <strong {...props} className="font-bold text-bone" />,
+                    img: ({node, ...props}) => <img {...props} className="my-4 w-full" />,
+                  }}
+                >
+                  {overall.content}
+                </ReactMarkdown>
+              </div>
+            </div>
+
+            {/* ATTRIBUTES */}
+            {attributes.length > 0 && (
+              <div>
+                <h2 className="font-display text-2xl uppercase text-bone">Attributes</h2>
+                <div className="mt-4 space-y-3">
+                  {attributes.map(([label, value]) => (
+                    <div key={label}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-bold uppercase tracking-wide text-bone-dim">{label}</span>
+                        <span className="font-display text-lg text-bone">{value}</span>
+                      </div>
+                      <div className="mt-1 h-1.5 w-full bg-ink-line">
+                        <div className="h-full bg-brand" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RATING HISTORY */}
+            {history?.timeline?.length > 1 && (
+              <div>
+                <h2 className="font-display text-2xl uppercase text-bone">Rating History</h2>
+                <div className="mt-4 border border-ink-line bg-ink-soft p-4">
+                  <RatingHistoryChart timeline={history.timeline} />
+                </div>
+              </div>
+            )}
+
+            {/* RELATED COVERAGE */}
+            {related.articles.length > 0 && (
+              <div>
+                <h2 className="font-display text-2xl uppercase text-bone">Related Coverage</h2>
+                <div className="mt-4 flex flex-col gap-3">
+                  {related.articles.map((a) => (
+                    <ArticleCard key={a.id} article={a} to={generateNewsUrl(a.id, a.title)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RELATED ARTISTS */}
+            {related.artists.length > 0 && (
+              <div>
+                <h2 className="font-display text-2xl uppercase text-bone">Related Artists</h2>
+                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  {related.artists.map((o) => (
+                    <OverallCard key={o.id} overall={o} size="small" />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Ad Sidebar */}
+          <div className="hidden w-72 flex-shrink-0 lg:block">
+            <div className="sticky top-24 space-y-4">
+              <HilltopMultiBanner />
+              <div className="h-[352px] overflow-hidden">
+                <SpotifyEmbed pageType="article" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <Footer />
     </div>

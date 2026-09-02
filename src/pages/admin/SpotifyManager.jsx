@@ -7,6 +7,11 @@ const SpotifyManager = () => {
   const [loading, setLoading] = useState(true);
   const [spotifyUrl, setSpotifyUrl] = useState('');
   const [pageType, setPageType] = useState('home');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [coverImage, setCoverImage] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
+  const [isFeatured, setIsFeatured] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -42,6 +47,16 @@ const SpotifyManager = () => {
     setTimeout(() => setMessage({ text: '', type: '' }), 3000);
   };
 
+  const handleCoverChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setCoverPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -51,17 +66,21 @@ const SpotifyManager = () => {
     }
 
     try {
+      const formData = new FormData();
+      formData.append('spotify_url', spotifyUrl);
+      formData.append('page_type', pageType);
+      formData.append('site', 'lowkeygrid');
+      if (title) formData.append('title', title);
+      if (description) formData.append('description', description);
+      formData.append('is_featured', isFeatured);
+      if (coverImage) formData.append('cover_image', coverImage);
+
       const response = await fetch(`${API_URL}/api/spotify-embeds`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          spotify_url: spotifyUrl,
-          page_type: pageType,
-          site: 'lowkeygrid'
-        })
+        body: formData
       });
 
       const data = await response.json();
@@ -71,6 +90,11 @@ const SpotifyManager = () => {
         fetchEmbeds();
         setSpotifyUrl('');
         setPageType('home');
+        setTitle('');
+        setDescription('');
+        setCoverImage(null);
+        setCoverPreview(null);
+        setIsFeatured(false);
       } else {
         showMessage(data.message || 'Error saving embed', 'error');
       }
@@ -105,6 +129,12 @@ const SpotifyManager = () => {
     }
   };
 
+  const pageTypeLabel = (pt) => {
+    if (pt === 'article') return 'Article Page';
+    if (pt === 'playlist') return 'AUX Playlist';
+    return 'Home Page';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -119,7 +149,7 @@ const SpotifyManager = () => {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Spotify Embed Manager</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Spotify &amp; Playlist Manager</h1>
             <button
               onClick={() => navigate('/admin/overalls')}
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors flex items-center gap-2"
@@ -146,7 +176,7 @@ const SpotifyManager = () => {
 
         {/* Form */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Add Spotify Embed</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Add Spotify Embed / Playlist</h3>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -158,12 +188,10 @@ const SpotifyManager = () => {
                 onChange={(e) => setPageType(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="home">Home Page</option>
-                <option value="article">Article Page</option>
+                <option value="home">Home Page (sidebar embed)</option>
+                <option value="article">Article Page (sidebar embed)</option>
+                <option value="playlist">AUX Playlist (branded card, shown on homepage + /playlists)</option>
               </select>
-              <p className="text-xs text-gray-500 mt-2">
-                Choose which page this Spotify embed will appear on
-              </p>
             </div>
 
             <div>
@@ -178,16 +206,60 @@ const SpotifyManager = () => {
                 placeholder="https://open.spotify.com/playlist/... or https://open.spotify.com/album/..."
                 required
               />
-              <p className="text-xs text-gray-500 mt-2">
-                Just paste any Spotify link (playlist, album, track, or artist) - everything else is automatic!
-              </p>
             </div>
+
+            {pageType === 'playlist' && (
+              <>
+                <div>
+                  <label className="block text-gray-700 mb-2 font-medium">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="e.g., ROTATION"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2 font-medium">
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="e.g., Current rap we're playing"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2 font-medium">
+                    Cover Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {coverPreview && (
+                    <img src={coverPreview} alt="Cover preview" className="mt-3 h-32 w-32 rounded-lg object-cover shadow" />
+                  )}
+                </div>
+                <label className="flex items-center gap-2 text-gray-700 font-medium">
+                  <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
+                  Featured (highlighted in AUX)
+                </label>
+              </>
+            )}
 
             <button
               type="submit"
               className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-lg transition transform hover:scale-105"
             >
-              Add to Sidebar
+              Add
             </button>
           </form>
         </div>
@@ -205,23 +277,32 @@ const SpotifyManager = () => {
                   key={embed.id}
                   className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-start justify-between"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="text-gray-900 font-semibold">{embed.title}</h4>
-                      <span className={`px-2 py-1 text-xs rounded ${
-                        embed.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {embed.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                      <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">
-                        {embed.embed_type}
-                      </span>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
-                        {embed.page_type === 'article' ? 'Article Page' : 'Home Page'}
-                      </span>
-                      <span className="text-gray-500 text-xs">Order: {embed.display_order}</span>
+                  <div className="flex items-start gap-4 flex-1">
+                    {embed.cover_image_url && (
+                      <img src={embed.cover_image_url} alt={embed.title} className="h-16 w-16 rounded object-cover" />
+                    )}
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h4 className="text-gray-900 font-semibold">{embed.title}</h4>
+                        <span className={`px-2 py-1 text-xs rounded ${
+                          embed.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {embed.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                        <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">
+                          {embed.embed_type}
+                        </span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                          {pageTypeLabel(embed.page_type)}
+                        </span>
+                        {embed.is_featured && (
+                          <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">Featured</span>
+                        )}
+                        <span className="text-gray-500 text-xs">Order: {embed.display_order}</span>
+                      </div>
+                      {embed.description && <p className="text-gray-600 text-sm mb-1">{embed.description}</p>}
+                      <p className="text-gray-500 text-sm truncate">{embed.spotify_url}</p>
                     </div>
-                    <p className="text-gray-500 text-sm truncate">{embed.spotify_url}</p>
                   </div>
                   <div className="ml-4">
                     <button

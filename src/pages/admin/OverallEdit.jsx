@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import AttributeEditor, { DEFAULT_ATTRIBUTE_ROWS } from '../../components/admin/AttributeEditor';
+import ArticleLinker from '../../components/admin/ArticleLinker';
+
+const TIERS = [
+  { value: '', label: 'None' },
+  { value: 'mainstream', label: 'Mainstream' },
+  { value: 'rising', label: 'Rising' },
+  { value: 'underground', label: 'Underground' },
+  { value: 'legend', label: 'Legend' },
+];
 
 function OverallEdit() {
   const { id } = useParams();
@@ -7,6 +17,10 @@ function OverallEdit() {
   const [overall, setOverall] = useState('');
   const [content, setContent] = useState('');
   const [instagramLink, setInstagramLink] = useState('');
+  const [artistTier, setArtistTier] = useState('');
+  const [location, setLocation] = useState('');
+  const [attributeRows, setAttributeRows] = useState(DEFAULT_ATTRIBUTE_ROWS);
+  const [linkedArticleIds, setLinkedArticleIds] = useState([]);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [existingImage, setExistingImage] = useState('');
@@ -35,8 +49,20 @@ function OverallEdit() {
       setOverall(data.overall || '');
       setContent(data.content);
       setInstagramLink(data.instagram_link || '');
+      setArtistTier(data.artist_tier || '');
+      setLocation(data.location || '');
       setExistingImage(data.image_url);
       setImagePreview(data.image_url);
+
+      if (data.attributes && typeof data.attributes === 'object' && Object.keys(data.attributes).length > 0) {
+        setAttributeRows(Object.entries(data.attributes).map(([label, value]) => ({ label, value: String(value) })));
+      }
+
+      if (data.slug) {
+        const relatedRes = await fetch(`${API_URL}/api/overalls/slug/${data.slug}/related`);
+        const relatedData = await relatedRes.json();
+        setLinkedArticleIds((relatedData?.articles || []).map(a => a.id));
+      }
     } catch (error) {
       setError('Failed to fetch overall');
       console.error(error);
@@ -81,6 +107,13 @@ function OverallEdit() {
       if (image) {
         formData.append('image', image);
       }
+      formData.append('artist_tier', artistTier);
+      formData.append('location', location);
+      const attributesObj = Object.fromEntries(
+        attributeRows.filter(r => r.label.trim() && r.value !== '').map(r => [r.label.trim(), Number(r.value)])
+      );
+      formData.append('attributes', JSON.stringify(attributesObj));
+      formData.append('article_ids', linkedArticleIds.join(','));
 
       const response = await fetch(`${API_URL}/api/overalls/${id}`, {
         method: 'PUT',
@@ -212,6 +245,55 @@ function OverallEdit() {
             <p className="mt-1 text-sm text-gray-500">
               Link to the Instagram post for this overall
             </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="artistTier" className="block text-sm font-medium text-gray-700 mb-2">
+                Artist Tier
+              </label>
+              <select
+                id="artistTier"
+                value={artistTier}
+                onChange={(e) => setArtistTier(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {TIERS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+              <p className="mt-1 text-sm text-gray-500">
+                Powers Board filters, Rookie Class, and Rankings views
+              </p>
+            </div>
+            <div>
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+                Location
+              </label>
+              <input
+                type="text"
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="e.g., Atlanta, GA"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Attributes
+            </label>
+            <AttributeEditor rows={attributeRows} onChange={setAttributeRows} />
+            <p className="mt-1 text-sm text-gray-500">
+              Shown on the hero and Overall detail page. Leave value blank to skip that attribute.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Related Coverage
+            </label>
+            <ArticleLinker selectedIds={linkedArticleIds} onChange={setLinkedArticleIds} />
           </div>
 
           <div>

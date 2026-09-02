@@ -60,42 +60,21 @@ const ArticleDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen text-gray-900" style={{
-        backgroundColor: '#f5f5f5',
-        backgroundImage: `
-          repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-          repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-          linear-gradient(135deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5),
-          linear-gradient(45deg, rgba(249, 115, 22, 0.05) 0%, rgba(234, 88, 12, 0.08) 100%)
-        `,
-        backgroundSize: '100% 100%, 100% 100%, 20px 20px, 100% 100%'
-      }}>
-        <div className="flex-1 flex items-center justify-center py-20">
-          <div className="text-xl">Loading article...</div>
-        </div>
-        <Footer />
+      <div className="flex min-h-screen items-center justify-center bg-ink">
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-brand" />
       </div>
     );
   }
 
   if (error || !article) {
     return (
-      <div className="min-h-screen text-gray-900" style={{
-        backgroundColor: '#f5f5f5',
-        backgroundImage: `
-          repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-          repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-          linear-gradient(135deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5),
-          linear-gradient(45deg, rgba(249, 115, 22, 0.05) 0%, rgba(234, 88, 12, 0.08) 100%)
-        `,
-        backgroundSize: '100% 100%, 100% 100%, 20px 20px, 100% 100%'
-      }}>
-        <div className="flex-1 flex items-center justify-center py-20">
+      <div className="min-h-screen bg-ink">
+        <div className="flex flex-1 items-center justify-center py-20">
           <div className="text-center">
-            <div className="text-red-600 text-xl mb-4">{error || 'Article not found'}</div>
+            <div className="mb-4 text-xl text-down">{error || 'Article not found'}</div>
             <button
               onClick={() => navigate('/')}
-              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white transition-colors"
+              className="border border-brand bg-brand px-6 py-3 text-sm font-bold uppercase tracking-wide text-ink transition-colors hover:bg-transparent hover:text-brand"
             >
               Back to Home
             </button>
@@ -123,16 +102,7 @@ const ArticleDetail = () => {
   const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   return (
-    <div className="min-h-screen text-gray-900" style={{
-      backgroundColor: '#f5f5f5',
-      backgroundImage: `
-        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-        linear-gradient(135deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5),
-        linear-gradient(45deg, rgba(249, 115, 22, 0.05) 0%, rgba(234, 88, 12, 0.08) 100%)
-      `,
-      backgroundSize: '100% 100%, 100% 100%, 20px 20px, 100% 100%'
-    }}>
+    <div className="min-h-screen bg-ink">
       {/* SEO Meta Tags */}
       <Helmet>
         <title>{article.title} | 2koveralls</title>
@@ -162,58 +132,58 @@ const ArticleDetail = () => {
 
       <div className="relative">
         {/* Share Sidebar - Fixed to far left */}
-        <div className="hidden lg:flex fixed left-8 top-1/3 flex-col items-center gap-4 z-50">
+        <div className="fixed left-8 top-1/3 z-50 hidden flex-col items-center gap-4 lg:flex">
           <button
             onClick={handleCopyLink}
-            className="w-12 h-12 flex items-center justify-center bg-white border-2 border-gray-200 hover:border-orange-400 transition-all text-gray-600 hover:text-orange-600"
+            className="flex h-12 w-12 items-center justify-center border border-ink-line bg-ink-soft text-bone-dim transition-colors hover:border-brand hover:text-brand"
             title="Copy link"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
           </button>
           <button
             onClick={handleEmailShare}
-            className="w-12 h-12 flex items-center justify-center bg-white border-2 border-gray-200 hover:border-orange-400 transition-all text-gray-600 hover:text-orange-600"
+            className="flex h-12 w-12 items-center justify-center border border-ink-line bg-ink-soft text-bone-dim transition-colors hover:border-brand hover:text-brand"
             title="Share via email"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </button>
           <button
             onClick={handleTweet}
-            className="w-12 h-12 flex items-center justify-center bg-white border-2 border-gray-200 hover:border-orange-400 transition-all text-gray-600 hover:text-orange-600"
+            className="flex h-12 w-12 items-center justify-center border border-ink-line bg-ink-soft text-bone-dim transition-colors hover:border-brand hover:text-brand"
             title="Share on Twitter"
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
           </button>
         </div>
 
         {/* Main Content with Ad Sidebar */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex gap-8 justify-center">
+        <div className="mx-auto flex max-w-6xl justify-center gap-8 px-4 py-12 sm:px-6 lg:px-8">
           <div className="max-w-4xl flex-1">
             {/* Back Button */}
             <button
               onClick={() => navigate('/')}
-              className="mb-6 flex items-center gap-2 text-gray-700 hover:text-orange-600 transition-colors"
+              className="mb-6 flex items-center gap-2 text-sm text-bone-dim transition-colors hover:text-brand"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Home
             </button>
 
-            <div className="bg-white border-2 border-gray-200 overflow-hidden">
+            <div className="overflow-hidden border border-ink-line bg-ink-soft">
               {/* Article Image */}
               {article.image_url && (
                 <div className="overflow-hidden">
                   <img
                     src={article.image_url}
                     alt={article.title}
-                    className="w-full h-96 object-cover"
+                    className="h-96 w-full object-cover"
                   />
                 </div>
               )}
@@ -222,9 +192,9 @@ const ArticleDetail = () => {
               <div className="p-8 md:p-12">
                 {/* Article Header */}
                 <div className="mb-8">
-                  <h1 className="text-4xl md:text-5xl font-bold mb-4 text-black">{article.title}</h1>
+                  <h1 className="mb-4 font-display text-4xl uppercase leading-tight text-bone md:text-5xl">{article.title}</h1>
 
-                  <div className="flex items-center gap-4 text-gray-500 text-sm mb-6">
+                  <div className="mb-6 flex items-center gap-4 text-sm text-bone-dim">
                     <span>By {article.author}</span>
                     <span>•</span>
                     <span>{new Date(article.created_at).toLocaleDateString('en-US', {
@@ -240,7 +210,7 @@ const ArticleDetail = () => {
                       {article.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-orange-100 text-orange-600 text-sm border border-orange-300"
+                          className="border border-brand/40 bg-ink px-3 py-1 text-sm text-brand"
                         >
                           {tag}
                         </span>
@@ -250,7 +220,7 @@ const ArticleDetail = () => {
                 </div>
 
                 {/* Article Content */}
-                <div className="prose prose-lg max-w-none">
+                <div className="max-w-none">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
@@ -259,34 +229,34 @@ const ArticleDetail = () => {
                           {...props}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-orange-600 hover:text-orange-700 underline"
+                          className="text-brand underline hover:text-bone"
                         />
                       ),
                       h1: ({ node, ...props }) => (
-                        <h1 {...props} className="text-3xl font-bold mt-8 mb-4 text-black" />
+                        <h1 {...props} className="mt-8 mb-4 text-3xl font-bold text-bone" />
                       ),
                       h2: ({ node, ...props }) => (
-                        <h2 {...props} className="text-2xl font-bold mt-6 mb-3 text-black" />
+                        <h2 {...props} className="mt-6 mb-3 text-2xl font-bold text-bone" />
                       ),
                       h3: ({ node, ...props }) => (
-                        <h3 {...props} className="text-xl font-bold mt-4 mb-2 text-black" />
+                        <h3 {...props} className="mt-4 mb-2 text-xl font-bold text-bone" />
                       ),
                       p: ({ node, ...props }) => (
-                        <p {...props} className="text-gray-700 leading-relaxed mb-4" />
+                        <p {...props} className="mb-4 leading-relaxed text-bone-dim" />
                       ),
                       ul: ({ node, ...props }) => (
-                        <ul {...props} className="list-disc list-inside mb-4 text-gray-700" />
+                        <ul {...props} className="mb-4 list-inside list-disc text-bone-dim" />
                       ),
                       ol: ({ node, ...props }) => (
-                        <ol {...props} className="list-decimal list-inside mb-4 text-gray-700" />
+                        <ol {...props} className="mb-4 list-inside list-decimal text-bone-dim" />
                       ),
                       blockquote: ({ node, ...props }) => (
-                        <blockquote {...props} className="border-l-4 border-orange-500 pl-4 italic text-gray-600 my-4" />
+                        <blockquote {...props} className="my-4 border-l-4 border-brand pl-4 italic text-bone-dim" />
                       ),
                       code: ({ node, inline, ...props }) => (
                         inline ?
-                          <code {...props} className="bg-gray-100 px-1 py-0.5 text-orange-600" /> :
-                          <code {...props} className="block bg-gray-100 p-4 text-orange-600 overflow-x-auto" />
+                          <code {...props} className="bg-ink px-1 py-0.5 text-brand" /> :
+                          <code {...props} className="block overflow-x-auto bg-ink p-4 text-brand" />
                       ),
                     }}
                   >
@@ -297,7 +267,7 @@ const ArticleDetail = () => {
                 {/* Spotify Embed */}
                 {article.spotify_url && (
                   <div className="mt-8">
-                    <h2 className="text-2xl font-bold mb-4">Listen on Spotify</h2>
+                    <h2 className="mb-4 font-display text-2xl uppercase text-bone">Listen on Spotify</h2>
                     <div className="overflow-hidden">
                       <iframe
                         src={article.spotify_url.replace('open.spotify.com', 'open.spotify.com/embed')}
@@ -314,8 +284,8 @@ const ArticleDetail = () => {
                 {/* YouTube Embed */}
                 {article.youtube_url && (
                   <div className="mt-8">
-                    <h2 className="text-2xl font-bold mb-4">Watch on YouTube</h2>
-                    <div className="overflow-hidden aspect-video">
+                    <h2 className="mb-4 font-display text-2xl uppercase text-bone">Watch on YouTube</h2>
+                    <div className="aspect-video overflow-hidden">
                       <iframe
                         src={article.youtube_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
                         width="100%"
@@ -332,7 +302,7 @@ const ArticleDetail = () => {
                 {/* SoundCloud Embed */}
                 {article.soundcloud_url && (
                   <div className="mt-8">
-                    <h2 className="text-2xl font-bold mb-4">Listen on SoundCloud</h2>
+                    <h2 className="mb-4 font-display text-2xl uppercase text-bone">Listen on SoundCloud</h2>
                     <div className="overflow-hidden">
                       <iframe
                         width="100%"
@@ -348,10 +318,10 @@ const ArticleDetail = () => {
                 )}
 
                 {/* Back Button Section */}
-                <div className="mt-8 pt-8 border-t-2 border-gray-200">
+                <div className="mt-8 border-t border-ink-line pt-8">
                   <button
                     onClick={() => navigate('/')}
-                    className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors"
+                    className="border border-brand bg-brand px-6 py-3 text-sm font-bold uppercase tracking-wide text-ink transition-colors hover:bg-transparent hover:text-brand"
                   >
                     Back to Home
                   </button>
@@ -361,7 +331,7 @@ const ArticleDetail = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="hidden lg:block w-80 flex-shrink-0">
+          <div className="hidden w-80 flex-shrink-0 lg:block">
             <div className="sticky top-24 space-y-6">
               <AmazonWidget page="article" />
             </div>
@@ -371,14 +341,14 @@ const ArticleDetail = () => {
 
       {/* More Articles Section */}
       {moreArticles.length > 0 && (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t-2 border-gray-200">
-          <h2 className="text-3xl font-bold mb-8 text-black">More Articles</h2>
+        <div className="mx-auto max-w-6xl border-t border-ink-line px-4 py-16 sm:px-6 lg:px-8">
+          <h2 className="mb-8 font-display text-3xl uppercase text-bone">More Articles</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {moreArticles.map((article) => (
               <div
                 key={article.id}
                 onClick={() => window.location.href = generateArticleUrl(article.id, article.title)}
-                className="bg-white border-2 border-gray-200 hover:border-orange-400 overflow-hidden transition cursor-pointer"
+                className="cursor-pointer overflow-hidden border border-ink-line bg-ink-soft transition-colors hover:border-brand"
               >
                 {/* Article Image */}
                 {article.image_url && (
@@ -386,22 +356,22 @@ const ArticleDetail = () => {
                     <img
                       src={article.image_url}
                       alt={article.title}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   </div>
                 )}
 
                 {/* Article Content */}
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2 line-clamp-2 text-black hover:text-orange-600 transition-colors">
+                  <h3 className="mb-2 line-clamp-2 text-xl font-semibold text-bone transition-colors hover:text-brand">
                     {article.title}
                   </h3>
 
-                  <p className="text-gray-500 text-xs mb-3">
+                  <p className="mb-3 text-xs text-bone-dim">
                     By {article.author} • {new Date(article.created_at).toLocaleDateString()}
                   </p>
 
-                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                  <p className="mb-4 line-clamp-3 text-sm text-bone-dim">
                     {article.content.substring(0, 150)}...
                   </p>
 
@@ -411,7 +381,7 @@ const ArticleDetail = () => {
                       {article.tags.slice(0, 3).map((tag, index) => (
                         <span
                           key={index}
-                          className="px-2 py-1 bg-orange-100 text-orange-600 text-xs"
+                          className="bg-ink px-2 py-1 text-xs text-brand"
                         >
                           {tag}
                         </span>

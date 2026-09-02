@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import Footer from '../components/Footer';
+import ArticleCard from '../components/ArticleCard';
 import { generateNewsUrl } from '../utils/slugify';
 
 function News() {
@@ -26,105 +27,39 @@ function News() {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading news...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-ink">
       <Helmet>
-        <title>News | 2koveralls</title>
-        <meta name="description" content="Stay updated with the latest in hip-hop and music culture" />
-        <meta property="og:title" content="News | 2koveralls" />
+        <title>Articles | 2koveralls</title>
+        <meta name="description" content="Stay updated with the latest in hip-hop and music culture." />
+        <meta property="og:title" content="Articles | 2koveralls" />
         <meta property="og:site_name" content="2koveralls" />
       </Helmet>
 
-      {/* Hero Section */}
-      <div className="bg-orange-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Latest News</h1>
-          <p className="text-xl text-orange-100">
-            Stay updated with the latest in hip-hop and music culture
-          </p>
-        </div>
-      </div>
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+        <h1 className="font-display text-4xl uppercase text-bone sm:text-5xl">Articles</h1>
+        <p className="mt-2 text-sm text-bone-dim">News, rating updates, and rap culture coverage.</p>
 
-      {/* Articles Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {articles.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No news articles yet. Check back soon!</p>
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-brand" />
           </div>
+        ) : error ? (
+          <p className="mt-8 border border-down bg-ink-soft p-4 text-sm text-down">{error}</p>
+        ) : articles.length === 0 ? (
+          <p className="mt-8 border border-ink-line bg-ink-soft p-10 text-center text-sm text-bone-dim">
+            No articles yet. Check back soon!
+          </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {articles.map((article) => (
-              <Link
-                key={article.id}
-                to={generateNewsUrl(article.id, article.title)}
-                className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-              >
-                {(article.thumbnail_url || article.image_url) && (
-                  <div className="relative overflow-hidden h-48">
-                    <img
-                      src={article.thumbnail_url || article.image_url}
-                      alt={article.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                )}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
-                    {article.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    By {article.author} • {formatDate(article.created_at)}
-                  </p>
-                  <p className="text-gray-700 line-clamp-3">
-                    {article.content.substring(0, 150)}...
-                  </p>
-                  {article.tags && article.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {article.tags.slice(0, 3).map((tag, index) => (
-                        <span
-                          key={index}
-                          className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </Link>
+              <ArticleCard key={article.id} article={article} to={generateNewsUrl(article.id, article.title)} />
             ))}
           </div>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 }

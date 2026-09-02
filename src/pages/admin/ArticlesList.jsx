@@ -63,6 +63,24 @@ function ArticlesList() {
     }
   };
 
+  const handleToggleFeature = async (article) => {
+    const token = localStorage.getItem('adminToken');
+    try {
+      const response = await fetch(`${API_URL}/api/lowkeygrid/articles/${article.id}/feature`, {
+        method: article.is_featured ? 'DELETE' : 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (response.ok) {
+        fetchArticles();
+      } else {
+        alert('Failed to update featured status');
+      }
+    } catch (error) {
+      console.error('Error toggling featured status:', error);
+      alert('Failed to update featured status');
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     navigate('/admin/login');
@@ -154,6 +172,11 @@ function ArticlesList() {
                             {article.category}
                           </span>
                         )}
+                        {article.is_featured && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                            Featured
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-gray-600 mt-1">
                         By {article.author} • {formatDate(article.created_at)}
@@ -172,6 +195,12 @@ function ArticlesList() {
                       )}
                     </div>
                     <div className="flex space-x-3">
+                      <button
+                        onClick={() => handleToggleFeature(article)}
+                        className={article.is_featured ? 'text-orange-600 hover:text-orange-800 font-medium' : 'text-gray-500 hover:text-gray-700 font-medium'}
+                      >
+                        {article.is_featured ? 'Unfeature' : 'Feature'}
+                      </button>
                       <Link
                         to={`/admin/articles/edit/${article.id}`}
                         className="text-indigo-600 hover:text-indigo-800 font-medium"

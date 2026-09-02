@@ -1,49 +1,60 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import Footer from '../components/Footer';
-import SpotifyEmbed from '../components/SpotifyEmbed';
-import twoKBackground from '../assets/2kbackground.png';
+import OverallCard from '../components/OverallCard';
+import MovementBadge from '../components/MovementBadge';
+import TierBadge, { TIER_LABELS } from '../components/TierBadge';
+import SectionHeader from '../components/SectionHeader';
+import TrendingTicker from '../components/TrendingTicker';
+import ArticleCard from '../components/ArticleCard';
+import PlaylistCard from '../components/PlaylistCard';
 import { generateNewsUrl } from '../utils/slugify';
 import { stripMarkdown } from '../utils/markdownUtils';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const TIER_FILTERS = ['mainstream', 'underground', 'rising', 'legend'];
+
 export default function Home() {
-  const [heroOverall, setHeroOverall] = useState(null);
-  const [squareOveralls, setSquareOveralls] = useState([]);
+  const [hero, setHero] = useState(null);
   const [overalls, setOveralls] = useState([]);
-  const [writeUps, setWriteUps] = useState([]);
+  const [stockWatch, setStockWatch] = useState({ up: [], down: [] });
   const [featuredArticle, setFeaturedArticle] = useState(null);
+  const [writeUps, setWriteUps] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
+  const [boardTier, setBoardTier] = useState('all');
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch hero featured overall
-        const heroResponse = await fetch(`${API_URL}/api/overalls/featured/hero`);
-        const heroData = await heroResponse.json();
-        setHeroOverall(heroData);
+        const [
+          heroRes, overallsRes, stockRes, lkgFeaturedRes, writeUpsRes, playlistsRes,
+        ] = await Promise.all([
+          fetch(`${API_URL}/api/overalls/featured/hero`).then(r => r.json()).catch(() => null),
+          fetch(`${API_URL}/api/overalls`).then(r => r.json()).catch(() => []),
+          fetch(`${API_URL}/api/overalls/stock-watch`).then(r => r.json()).catch(() => ({ up: [], down: [] })),
+          fetch(`${API_URL}/api/lowkeygrid/articles/featured/article`).then(r => r.json()).catch(() => ({ article: null })),
+          fetch(`${API_URL}/api/lowkeygrid/articles/writeups`).then(r => r.json()).catch(() => []),
+          fetch(`${API_URL}/api/spotify-embeds?site=lowkeygrid&page_type=playlist`).then(r => r.json()).catch(() => ({ embeds: [] })),
+        ]);
 
-        // Fetch square featured overalls
-        const squaresResponse = await fetch(`${API_URL}/api/overalls/featured/squares`);
-        const squaresData = await squaresResponse.json();
-        setSquareOveralls(squaresData);
+        setHero(heroRes);
+        setOveralls(Array.isArray(overallsRes) ? overallsRes : []);
+        setStockWatch(stockRes || { up: [], down: [] });
+        setWriteUps(Array.isArray(writeUpsRes) ? writeUpsRes : []);
+        setPlaylists(playlistsRes?.embeds || []);
 
-        // Fetch overalls
-        const overallsResponse = await fetch(`${API_URL}/api/overalls`);
-        const overallsData = await overallsResponse.json();
-        setOveralls(overallsData); // Store all overalls for carousel
-
-        // Fetch write ups (articles and interviews from lowkeygrid)
-        const writeUpsResponse = await fetch(`${API_URL}/api/lowkeygrid/articles/writeups`);
-        const writeUpsData = await writeUpsResponse.json();
-        setWriteUps(writeUpsData.slice(0, 6)); // Show first 6 write ups
-
-        // Fetch featured article from Cry808
-        const featuredResponse = await fetch(`${API_URL}/api/articles/featured/article`);
-        const featuredData = await featuredResponse.json();
-        setFeaturedArticle(featuredData.article || null);
+        // 2koveralls' own featured article first; fall back to Cry808's featured article
+        if (lkgFeaturedRes?.article) {
+          setFeaturedArticle(lkgFeaturedRes.article);
+        } else {
+          const cryRes = await fetch(`${API_URL}/api/articles/featured/article`).then(r => r.json()).catch(() => ({ article: null }));
+          setFeaturedArticle(cryRes?.article || null);
+        }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching home data:', error);
       } finally {
         setLoading(false);
       }
@@ -52,332 +63,268 @@ export default function Home() {
     fetchData();
   }, []);
 
-  const latestOveralls = overalls.slice(0, 4);
+  const availableTiers = TIER_FILTERS.filter(t => overalls.some(o => o.artist_tier === t));
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+  const boardOveralls = (boardTier === 'all' ? overalls : overalls.filter(o => o.artist_tier === boardTier))
+    .slice()
+    .sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1))
+    .slice(0, 8);
 
-  const SkeletonHero = () => (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-0 lg:pb-8">
-      <div className="lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-4">
-        <div className="flex flex-col gap-4 w-full max-w-[336px] sm:max-w-[556px] mx-auto lg:contents">
-          <div className="flex gap-4 lg:contents">
-            <div className="flex-1 bg-gray-200 animate-pulse"></div>
-            <div className="flex flex-col gap-2 w-[80px] sm:w-[140px]">
-              <div className="aspect-square bg-gray-200 animate-pulse"></div>
-              <div className="aspect-square bg-gray-200 animate-pulse"></div>
-              <div className="aspect-square bg-gray-200 animate-pulse"></div>
-            </div>
-          </div>
-          <div className="h-[196px] bg-gray-200 animate-pulse"></div>
-        </div>
+  const recentlyRated = overalls.slice().sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 8);
+
+  const rookieClass = overalls
+    .filter(o => o.artist_tier === 'rising')
+    .sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1))
+    .slice(0, 8);
+
+  // Trending ticker: real movers from Stock Watch + genuinely new overalls (no fake data)
+  const movers = [...stockWatch.up, ...stockWatch.down]
+    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+    .slice(0, 6);
+  const moverIds = new Set(movers.map(m => m.id));
+  const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  const newOveralls = overalls
+    .filter(o => !moverIds.has(o.id) && new Date(o.created_at).getTime() > fourteenDaysAgo)
+    .slice(0, 4)
+    .map(o => ({ ...o, isNew: true }));
+  const tickerItems = [...movers, ...newOveralls];
+
+  const heroAttributes = hero?.attributes && typeof hero.attributes === 'object' ? Object.entries(hero.attributes) : [];
+
+  const otherWriteUps = writeUps.filter(a => a.id !== featuredArticle?.id).slice(0, 4);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-ink">
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-brand" />
       </div>
-    </div>
-  );
-
-  const SkeletonOveralls = () => (
-    <div className="bg-white pt-0 pb-16 lg:pt-16 lg:pb-16">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <div className="h-9 w-40 bg-gray-200 animate-pulse rounded"></div>
-          <div className="h-5 w-16 bg-gray-200 animate-pulse rounded"></div>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="grid grid-cols-2 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="border-2 border-gray-100">
-                <div className="aspect-square bg-gray-200 animate-pulse"></div>
-                <div className="p-3">
-                  <div className="h-4 bg-gray-200 animate-pulse rounded mb-1"></div>
-                  <div className="h-3 bg-gray-200 animate-pulse rounded w-3/4"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="relative min-h-[300px] lg:min-h-0 bg-gray-200 animate-pulse"></div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const SkeletonWriteUps = () => (
-    <div className="py-8">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <div className="h-9 w-32 bg-gray-200 animate-pulse rounded"></div>
-        </div>
-        <div className="flex flex-col gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="flex gap-4 border-2 border-gray-100">
-              <div className="w-32 sm:w-48 flex-shrink-0 h-32 sm:h-36 bg-gray-200 animate-pulse"></div>
-              <div className="flex-1 p-4">
-                <div className="h-5 bg-gray-200 animate-pulse rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 animate-pulse rounded w-1/2 mb-3"></div>
-                <div className="h-3 bg-gray-200 animate-pulse rounded mb-1"></div>
-                <div className="h-3 bg-gray-200 animate-pulse rounded w-4/5"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="min-h-screen" style={{
-      backgroundColor: '#fafafa',
-      backgroundImage: `
-        radial-gradient(circle at 20% 30%, rgba(249, 115, 22, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(234, 88, 12, 0.04) 0%, transparent 50%),
-        repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(249, 115, 22, 0.02) 35px, rgba(249, 115, 22, 0.02) 70px),
-        linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%)
-      `,
-      backgroundSize: '100% 100%, 100% 100%, 100% 100%, 100% 100%'
-    }}>
-      {loading ? (
-        <>
-          <SkeletonHero />
-          <SkeletonOveralls />
-          <SkeletonWriteUps />
-        </>
-      ) : (
-        <>
-      {/* Hero Section */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-0 lg:pb-8">
-        {/* On desktop: 3-column grid. On mobile/tablet: centered flex column. */}
-        <div className="lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-4">
-          {/* lg:contents dissolves this wrapper so hero/squares/spotify become direct grid items on desktop */}
-          <div className="flex flex-col gap-4 w-full max-w-[336px] sm:max-w-[556px] mx-auto lg:contents">
-            {/* lg:contents dissolves this row wrapper on desktop */}
-            <div className="flex gap-4 lg:contents">
-              {/* Hero Featured Overall */}
-              {heroOverall ? (
+    <div className="min-h-screen bg-ink">
+      <Helmet>
+        <title>2K Overalls - Rap Has Stats Now</title>
+        <meta name="description" content="Objective ratings. Real debates. The culture's board. Artist ratings, rankings, music, and who's moving hip-hop forward." />
+      </Helmet>
+
+      {/* HERO */}
+      <section className="grain border-b border-ink-line">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-20">
+          <div className="flex flex-col justify-center">
+            <h1 className="font-display text-5xl uppercase leading-[0.95] text-bone sm:text-6xl lg:text-7xl">
+              Rap Has
+              <br />
+              <span className="text-brand">Stats Now.</span>
+            </h1>
+            <p className="mt-6 max-w-md text-base text-bone-dim">
+              Objective ratings. Real debates. The culture's board.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              {hero && (
                 <Link
-                  to={`/overalls/${heroOverall.slug}`}
-                  className="group flex-1 relative overflow-hidden bg-white border-2 border-gray-200 hover:border-orange-500 transition-all"
+                  to={`/overalls/${hero.slug}`}
+                  className="border border-brand bg-brand px-6 py-3 text-sm font-bold uppercase tracking-wider text-ink transition-colors hover:bg-transparent hover:text-brand"
                 >
-                  <img
-                    src={heroOverall.image_url}
-                    alt={heroOverall.title}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    style={{
-                      objectPosition: `${heroOverall.hero_crop_x ?? heroOverall.crop_x ?? 50}% ${heroOverall.hero_crop_y ?? heroOverall.crop_y ?? 50}%`,
-                      transform: `scale(${(heroOverall.hero_crop_zoom ?? heroOverall.crop_zoom ?? 100) / 100})`,
-                      transformOrigin: `${heroOverall.hero_crop_x ?? heroOverall.crop_x ?? 50}% ${heroOverall.hero_crop_y ?? heroOverall.crop_y ?? 50}%`,
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <h1 className="text-sm font-bold text-white mb-1 drop-shadow-lg">
-                      {heroOverall.title}
-                    </h1>
-                    {heroOverall.overall && (
-                      <span className="inline-block px-2 py-0.5 text-[10px] bg-orange-500 text-white font-semibold">
-                        {heroOverall.overall} Overall
-                      </span>
-                    )}
-                  </div>
+                  View Rating
                 </Link>
-              ) : (
-                <div className="flex-1 bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
-                  <p className="text-gray-500 text-sm">No featured overall yet</p>
+              )}
+              <Link
+                to="/overalls"
+                className="border border-ink-line px-6 py-3 text-sm font-bold uppercase tracking-wider text-bone transition-colors hover:border-brand hover:text-brand"
+              >
+                Read Why
+              </Link>
+            </div>
+          </div>
+
+          {hero ? (
+            <Link to={`/overalls/${hero.slug}`} className="group relative block border border-ink-line bg-ink-soft">
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <img
+                  src={hero.image_url}
+                  alt={hero.title}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  style={{
+                    objectPosition: `${hero.hero_crop_x ?? hero.crop_x ?? 50}% ${hero.hero_crop_y ?? hero.crop_y ?? 50}%`,
+                    transform: `scale(${(hero.hero_crop_zoom ?? hero.crop_zoom ?? 100) / 100})`,
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                {typeof hero.overall === 'number' && (
+                  <div className="absolute right-0 top-0 bg-brand px-4 py-2 font-display text-4xl leading-none text-ink sm:text-5xl">
+                    {hero.overall} <span className="text-lg">OVR</span>
+                  </div>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <h2 className="font-display text-3xl uppercase text-bone drop-shadow-lg">{hero.title}</h2>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-bone-dim">
+                    <MovementBadge change={hero.change} />
+                    {hero.artist_tier && <TierBadge tier={hero.artist_tier} />}
+                    {hero.location && <span>{hero.location}</span>}
+                  </div>
+                </div>
+              </div>
+              {heroAttributes.length > 0 && (
+                <div className="grid grid-cols-2 divide-x divide-y divide-ink-line border-t border-ink-line sm:grid-cols-3">
+                  {heroAttributes.slice(0, 6).map(([label, value]) => (
+                    <div key={label} className="flex items-center justify-between px-4 py-2 text-xs">
+                      <span className="uppercase tracking-wide text-bone-dim">{label}</span>
+                      <span className="font-display text-lg text-bone">{value}</span>
+                    </div>
+                  ))}
                 </div>
               )}
-
-              {/* 3 Square Featured Overalls - always stacked */}
-              <div className="flex flex-col gap-2 w-[80px] sm:w-[140px]">
-                {squareOveralls.length > 0 ? squareOveralls.map((overall) => (
-                  <Link
-                    key={overall.id}
-                    to={`/overalls/${overall.slug}`}
-                    className="group bg-white border-2 border-gray-200 hover:border-orange-500 transition-all overflow-hidden relative aspect-square"
-                  >
-                    <img
-                      src={overall.image_url}
-                      alt={overall.title}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      style={{
-                        objectPosition: `${overall.crop_x ?? 50}% ${overall.crop_y ?? 50}%`,
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 right-0 p-1.5">
-                      <h3 className="text-[10px] font-bold text-white drop-shadow-md line-clamp-1">
-                        {overall.title}{overall.overall ? ` - ${overall.overall}` : ''}
-                      </h3>
-                    </div>
-                  </Link>
-                )) : (
-                  <div className="bg-gray-100 border-2 border-gray-200 flex items-center justify-center flex-1">
-                    <p className="text-gray-500 text-sm">No square overalls yet</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Spotify - same width as hero+squares on mobile (parent max-w-[556px]), own column on desktop */}
-            <div className="overflow-hidden h-[196px] lg:h-auto">
-              <SpotifyEmbed pageType="home" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2K Overalls Section */}
-      <div className="relative bg-white pt-0 pb-16 lg:pt-16 lg:pb-16">
-        {/* Background image with 50% opacity */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-50"
-          style={{
-            backgroundImage: `url(${twoKBackground})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
-        ></div>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">2K Overalls</h2>
-            <Link
-              to="/overalls"
-              className="text-orange-500 hover:text-orange-600 font-semibold transition-colors"
-            >
-              View All →
             </Link>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: 2x2 grid of 4 overalls */}
-            <div className="grid grid-cols-2 gap-4">
-              {latestOveralls.map((overall) => (
-                <Link
-                  key={overall.id}
-                  to={`/overalls/${overall.slug}`}
-                  className="group bg-white border-2 border-gray-200 hover:border-orange-500 transition-all overflow-hidden"
-                >
-                  <div className="relative overflow-hidden aspect-square">
-                    <img
-                      src={overall.image_url}
-                      alt={overall.title}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      style={{ objectPosition: '50% 54%' }}
-                    />
-                  </div>
-                  <div className="p-3">
-                    <h3 className="text-sm font-bold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2">
-                      {overall.title}{overall.overall ? ` - ${overall.overall} Overall` : ''}
-                    </h3>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {/* Right: Featured article from Cry808 */}
-            {featuredArticle ? (
-              <div className="relative min-h-[300px] lg:min-h-0">
-                <Link
-                  to={generateNewsUrl(featuredArticle.id, featuredArticle.title)}
-                  className="group absolute inset-0 overflow-hidden block"
-                >
-                  {featuredArticle.image_url && (
-                    <img
-                      src={featuredArticle.image_url}
-                      alt={featuredArticle.title}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20"></div>
-                  <div className="absolute top-4 right-4">
-                    <span className="px-3 py-1 bg-orange-500 text-white text-xs font-bold uppercase tracking-wider">
-                      CRY808
-                    </span>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <span className="inline-block px-2 py-1 text-xs font-semibold bg-white/20 text-white uppercase tracking-wider mb-3">
-                      {featuredArticle.category === 'interview' ? 'Interview' : 'Article'}
-                    </span>
-                    <h2 className="text-2xl font-bold text-white mb-2 drop-shadow-lg leading-tight line-clamp-3">
-                      {featuredArticle.title}
-                    </h2>
-                    <p className="text-white/70 text-sm">
-                      By {featuredArticle.author} · {new Date(featuredArticle.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
-                  </div>
-                </Link>
-              </div>
-            ) : (
-              <div className="relative min-h-[300px] lg:min-h-0 bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
-                <p className="text-gray-500 text-sm">No featured article yet</p>
-              </div>
-            )}
-          </div>
-
-          {overalls.length === 0 && (
-            <div className="bg-gray-50 border-2 border-gray-200 p-12 text-center rounded-lg mt-6">
-              <p className="text-gray-500 text-lg">No overalls available yet</p>
+          ) : (
+            <div className="flex aspect-[4/3] items-center justify-center border border-ink-line bg-ink-soft">
+              <p className="text-sm text-bone-dim">No featured Overall yet</p>
             </div>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* Write Ups Section */}
-      <div className="py-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Write Ups</h2>
-          </div>
+      {/* TRENDING NOW */}
+      <TrendingTicker items={tickerItems} />
 
-          <div className="flex flex-col gap-4">
-            {writeUps.map((article) => (
-              <Link
-                key={article.id}
-                to={generateNewsUrl(article.id, article.title)}
-                className="group flex gap-4 bg-white border-2 border-gray-200 hover:border-orange-500 transition-all overflow-hidden"
+      {/* THE BOARD */}
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <SectionHeader title="The Board" subtitle="Who's up. Who's falling. Who's next." viewAllTo="/overalls">
+          <div className="scrollbar-none flex gap-2 overflow-x-auto">
+            {['all', ...availableTiers].map((t) => (
+              <button
+                key={t}
+                onClick={() => setBoardTier(t)}
+                className={`flex-shrink-0 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors ${
+                  boardTier === t ? 'border-brand bg-brand text-ink' : 'border-ink-line text-bone-dim hover:text-brand'
+                }`}
               >
-                {(article.thumbnail_url || article.image_url) ? (
-                  <div className="w-32 sm:w-48 flex-shrink-0 relative overflow-hidden self-stretch">
-                    <img
-                      src={article.thumbnail_url || article.image_url}
-                      alt={article.title}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-32 sm:w-48 flex-shrink-0 bg-gray-100"></div>
-                )}
-                <div className="flex-1 py-4 pr-4">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 group-hover:text-orange-600 transition-colors line-clamp-2">
-                    {article.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 mb-2">
-                    By {article.author} · {formatDate(article.created_at)}
-                  </p>
-                  <p className="text-sm text-gray-600 line-clamp-3">
-                    {stripMarkdown(article.content)}
-                  </p>
-                </div>
-              </Link>
+                {t === 'all' ? 'All' : TIER_LABELS[t]}
+              </button>
             ))}
           </div>
+        </SectionHeader>
 
-          {writeUps.length === 0 && (
-            <div className="bg-white border-2 border-gray-200 p-12 text-center">
-              <p className="text-gray-500 text-lg">No write ups available yet</p>
+        {boardOveralls.length > 0 ? (
+          <div className="scrollbar-none flex gap-4 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-4">
+            {boardOveralls.map((o) => (
+              <div key={o.id} className="w-40 flex-shrink-0 sm:w-auto">
+                <OverallCard overall={o} size="medium" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="border border-ink-line bg-ink-soft p-10 text-center text-sm text-bone-dim">
+            No Overalls in this class yet.
+          </p>
+        )}
+      </section>
+
+      {/* STOCK WATCH */}
+      {(stockWatch.up.length > 0 || stockWatch.down.length > 0) && (
+        <section className="border-y border-ink-line bg-ink-soft">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <SectionHeader title="Stock Watch" />
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+              <div>
+                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-up">Who's Up ▲</p>
+                <div className="space-y-2">
+                  {stockWatch.up.map((o) => (
+                    <Link key={o.id} to={`/overalls/${o.slug}`} className="flex items-center justify-between border border-ink-line bg-ink px-3 py-2 hover:border-up">
+                      <span className="text-sm font-bold text-bone">{o.title}</span>
+                      <MovementBadge change={o.change} />
+                    </Link>
+                  ))}
+                  {stockWatch.up.length === 0 && <p className="text-xs text-bone-dim">Nothing moving up yet.</p>}
+                </div>
+              </div>
+              <div>
+                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-down">Who's Down ▼</p>
+                <div className="space-y-2">
+                  {stockWatch.down.map((o) => (
+                    <Link key={o.id} to={`/overalls/${o.slug}`} className="flex items-center justify-between border border-ink-line bg-ink px-3 py-2 hover:border-down">
+                      <span className="text-sm font-bold text-bone">{o.title}</span>
+                      <MovementBadge change={o.change} />
+                    </Link>
+                  ))}
+                  {stockWatch.down.length === 0 && <p className="text-xs text-bone-dim">Nothing moving down yet.</p>}
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      </div>
-        </>
+          </div>
+        </section>
       )}
 
-      <div className="relative z-10 w-full">
-        <Footer />
-      </div>
+      {/* THE LATEST */}
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <SectionHeader title="The Latest" viewAllTo="/news" />
+        {featuredArticle || otherWriteUps.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {featuredArticle && (
+              <ArticleCard
+                article={featuredArticle}
+                to={generateNewsUrl(featuredArticle.id, featuredArticle.title)}
+                featured
+              />
+            )}
+            <div className="flex flex-col gap-4">
+              {otherWriteUps.map((a) => (
+                <ArticleCard key={a.id} article={a} to={generateNewsUrl(a.id, a.title)} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="border border-ink-line bg-ink-soft p-10 text-center text-sm text-bone-dim">
+            No coverage yet. Check back soon.
+          </p>
+        )}
+      </section>
+
+      {/* ROOKIE CLASS */}
+      {rookieClass.length > 0 && (
+        <section className="border-y border-ink-line bg-ink-soft">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <SectionHeader title="Rookie Class" subtitle="New and emerging artists on the rise." viewAllTo="/overalls?tier=rising" />
+            <div className="scrollbar-none flex gap-4 overflow-x-auto sm:grid sm:grid-cols-4 sm:overflow-visible lg:grid-cols-6">
+              {rookieClass.map((o) => (
+                <div key={o.id} className="w-32 flex-shrink-0 sm:w-auto">
+                  <OverallCard overall={o} size="small" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* AUX / PLAYLISTS */}
+      {playlists.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <SectionHeader title="AUX" subtitle="What we're playing right now." viewAllTo="/playlists" />
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {playlists.slice(0, 4).map((p) => (
+              <PlaylistCard key={p.id} playlist={p} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* RECENTLY RATED */}
+      {recentlyRated.length > 0 && (
+        <section className="border-t border-ink-line">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <SectionHeader title="Recently Rated" viewAllTo="/overalls?sort=updated" />
+            <div className="scrollbar-none flex gap-4 overflow-x-auto sm:grid sm:grid-cols-4 sm:overflow-visible lg:grid-cols-8">
+              {recentlyRated.map((o) => (
+                <div key={o.id} className="w-32 flex-shrink-0 sm:w-auto">
+                  <OverallCard overall={o} size="small" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <Footer />
     </div>
   );
 }

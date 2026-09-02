@@ -36,23 +36,14 @@ export default function SubmitMusic() {
   };
 
   return (
-    <div className="min-h-screen text-gray-900" style={{
-      backgroundColor: '#f5f5f5',
-      backgroundImage: `
-        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-        linear-gradient(135deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5),
-        linear-gradient(45deg, rgba(249, 115, 22, 0.05) 0%, rgba(234, 88, 12, 0.08) 100%)
-      `,
-      backgroundSize: '100% 100%, 100% 100%, 20px 20px, 100% 100%'
-    }}>
+    <div className="min-h-screen bg-ink">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white border-2 border-gray-200 p-8 md:p-12">
-          <h1 className="text-4xl font-bold mb-6 text-orange-600">Submit Your Music</h1>
+        <div className="border border-ink-line bg-ink-soft p-8 md:p-12">
+          <h1 className="text-4xl font-bold mb-6 text-brand">Submit Your Music</h1>
 
-          <div className="mb-8 p-4 bg-orange-50 border-2 border-orange-200">
-            <h3 className="font-bold text-black mb-2">Submission Guidelines:</h3>
-            <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+          <div className="mb-8 border-2 border-brand/30 bg-ink p-4">
+            <h3 className="font-bold text-bone mb-2">Submission Guidelines:</h3>
+            <ul className="list-disc list-inside space-y-1 text-sm text-bone-dim">
               <li>We accept all subgenres of hip hop</li>
               <li>Must be original work or have proper licensing</li>
               <li>Include links to streaming platforms (SoundCloud, Spotify, etc.)</li>
@@ -64,7 +55,7 @@ export default function SubmitMusic() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="artistName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="artistName" className="block text-sm font-medium text-bone-dim mb-2">
                   Artist/Group Name *
                 </label>
                 <input
@@ -74,12 +65,12 @@ export default function SubmitMusic() {
                   value={formData.artistName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
+                  className="w-full px-4 py-2 border-2 border-ink-line bg-ink text-bone placeholder-bone-dim focus:border-brand focus:outline-none transition-colors"
                 />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-bone-dim mb-2">
                   Email *
                 </label>
                 <input
@@ -89,14 +80,14 @@ export default function SubmitMusic() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
+                  className="w-full px-4 py-2 border-2 border-ink-line bg-ink text-bone placeholder-bone-dim focus:border-brand focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="trackTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="trackTitle" className="block text-sm font-medium text-bone-dim mb-2">
                   Track/Album Title *
                 </label>
                 <input
@@ -106,12 +97,12 @@ export default function SubmitMusic() {
                   value={formData.trackTitle}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
+                  className="w-full px-4 py-2 border-2 border-ink-line bg-ink text-bone placeholder-bone-dim focus:border-brand focus:outline-none transition-colors"
                 />
               </div>
 
               <div>
-                <label htmlFor="genre" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="genre" className="block text-sm font-medium text-bone-dim mb-2">
                   Subgenre
                 </label>
                 <input
@@ -121,13 +112,13 @@ export default function SubmitMusic() {
                   value={formData.genre}
                   onChange={handleChange}
                   placeholder="e.g., Boom Bap, Lo-fi, Trap"
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
+                  className="w-full px-4 py-2 border-2 border-ink-line bg-ink text-bone placeholder-bone-dim focus:border-brand focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="soundcloudLink" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="soundcloudLink" className="block text-sm font-medium text-bone-dim mb-2">
                 SoundCloud Link *
               </label>
               <input
@@ -138,12 +129,12 @@ export default function SubmitMusic() {
                 onChange={handleChange}
                 required
                 placeholder="https://soundcloud.com/..."
-                className="w-full px-4 py-2 border-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2 border-2 border-ink-line bg-ink text-bone placeholder-bone-dim focus:border-brand focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="spotifyLink" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="spotifyLink" className="block text-sm font-medium text-bone-dim mb-2">
                 Spotify Link (Optional)
               </label>
               <input
@@ -153,12 +144,12 @@ export default function SubmitMusic() {
                 value={formData.spotifyLink}
                 onChange={handleChange}
                 placeholder="https://open.spotify.com/..."
-                className="w-full px-4 py-2 border-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2 border-2 border-ink-line bg-ink text-bone placeholder-bone-dim focus:border-brand focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="description" className="block text-sm font-medium text-bone-dim mb-2">
                 Tell Us About Your Music *
               </label>
               <textarea
@@ -169,19 +160,19 @@ export default function SubmitMusic() {
                 required
                 rows="6"
                 placeholder="Tell us your story, what inspires you, and what makes your sound different..."
-                className="w-full px-4 py-2 border-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors resize-none"
+                className="w-full px-4 py-2 border-2 border-ink-line bg-ink text-bone placeholder-bone-dim focus:border-brand focus:outline-none transition-colors resize-none"
               />
             </div>
 
             <button
               type="submit"
-              className="px-8 py-3 bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors"
+              className="px-8 py-3 bg-brand text-ink font-bold uppercase tracking-wide hover:bg-transparent hover:text-brand border border-brand transition-colors"
             >
               Submit Music
             </button>
 
             {status && (
-              <div className="mt-4 p-4 bg-green-50 border-2 border-green-500 text-green-700">
+              <div className="mt-4 border-2 border-up bg-ink p-4 text-up">
                 {status}
               </div>
             )}

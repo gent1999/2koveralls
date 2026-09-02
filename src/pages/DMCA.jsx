@@ -2,30 +2,21 @@ import Footer from '../components/Footer';
 
 export default function DMCA() {
   return (
-    <div className="min-h-screen text-gray-900" style={{
-      backgroundColor: '#f5f5f5',
-      backgroundImage: `
-        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
-        linear-gradient(135deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5),
-        linear-gradient(45deg, rgba(249, 115, 22, 0.05) 0%, rgba(234, 88, 12, 0.08) 100%)
-      `,
-      backgroundSize: '100% 100%, 100% 100%, 20px 20px, 100% 100%'
-    }}>
+    <div className="min-h-screen bg-ink">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white border-2 border-gray-200 p-8 md:p-12">
-          <h1 className="text-4xl font-bold mb-6 text-orange-600">DMCA Policy</h1>
+        <div className="border border-ink-line bg-ink-soft p-8 md:p-12">
+          <h1 className="text-4xl font-bold mb-6 text-brand">DMCA Policy</h1>
 
-          <div className="space-y-6 text-gray-700 leading-relaxed">
+          <div className="space-y-6 text-bone-dim leading-relaxed">
             <section>
-              <h2 className="text-2xl font-bold mb-3 text-black">Copyright Infringement Notice</h2>
+              <h2 className="text-2xl font-bold mb-3 text-bone">Copyright Infringement Notice</h2>
               <p>
                 2koveralls respects the intellectual property rights of others and expects our users to do the same. In accordance with the Digital Millennium Copyright Act (DMCA), we will respond promptly to claims of copyright infringement on our website.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mb-3 text-black">Filing a DMCA Notice</h2>
+              <h2 className="text-2xl font-bold mb-3 text-bone">Filing a DMCA Notice</h2>
               <p>
                 If you believe that your copyrighted work has been copied in a way that constitutes copyright infringement and is accessible on this site, you may notify us by providing our copyright agent with the following information in writing:
               </p>
@@ -40,7 +31,7 @@ export default function DMCA() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mb-3 text-black">Counter-Notification</h2>
+              <h2 className="text-2xl font-bold mb-3 text-bone">Counter-Notification</h2>
               <p>
                 If you believe that your content was removed or disabled by mistake or misidentification, you may file a counter-notification with us by providing the following information:
               </p>
@@ -54,14 +45,14 @@ export default function DMCA() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mb-3 text-black">Repeat Infringers</h2>
+              <h2 className="text-2xl font-bold mb-3 text-bone">Repeat Infringers</h2>
               <p>
                 We will terminate the accounts of users who are repeat infringers of copyright in appropriate circumstances.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mb-3 text-black">Contact Information</h2>
+              <h2 className="text-2xl font-bold mb-3 text-bone">Contact Information</h2>
               <p>
                 Please send DMCA notices and counter-notifications to us through our Contact page. Please clearly mark your communication as a "DMCA Notice" or "DMCA Counter-Notification."
               </p>

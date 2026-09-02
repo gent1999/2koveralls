@@ -15,6 +15,8 @@ import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
 import Overalls from './pages/Overalls';
 import OverallDetail from './pages/OverallDetail';
+import Rankings from './pages/Rankings';
+import Playlists from './pages/Playlists';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import OverallsList from './pages/admin/OverallsList';
@@ -38,7 +40,7 @@ function App() {
   return (
     <HelmetProvider>
     <Router>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-ink">
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -53,6 +55,8 @@ function App() {
           <Route path="/news/:id" element={<NewsDetail />} />
           <Route path="/overalls" element={<Overalls />} />
           <Route path="/overalls/:slug" element={<OverallDetail />} />
+          <Route path="/rankings" element={<Rankings />} />
+          <Route path="/playlists" element={<Playlists />} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />

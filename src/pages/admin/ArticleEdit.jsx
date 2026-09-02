@@ -208,12 +208,16 @@ function ArticleEdit() {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="trends">Trends (Public on 2koveralls)</option>
+              <option value="trends">Trends (News list on 2koveralls)</option>
               <option value="article">Article (Shared with Cry808)</option>
               <option value="interview">Interview (Shared with Cry808)</option>
+              <option value="review">Review</option>
+              <option value="editorial">Editorial</option>
+              <option value="rating_update">Rating Update</option>
+              <option value="rankings">Rankings</option>
             </select>
             <p className="mt-2 text-sm text-gray-500">
-              Only 'Trends' will appear on 2koveralls public pages
+              'Trends' appears on the /news list. All categories show up in The Latest / Related Coverage and have their own detail page.
             </p>
           </div>
 
