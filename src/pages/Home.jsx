@@ -78,17 +78,30 @@ export default function Home() {
     .sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1))
     .slice(0, 8);
 
-  // Trending ticker: real movers from Stock Watch + genuinely new overalls (no fake data)
+  // Trending ticker: real movers from Stock Watch + genuinely new overalls first.
+  // No fake data — if there isn't enough movement/new-artist data yet, fall back
+  // to recently-updated overalls showing their current OVR (no invented change).
   const movers = [...stockWatch.up, ...stockWatch.down]
     .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
     .slice(0, 6);
-  const moverIds = new Set(movers.map(m => m.id));
+  const usedIds = new Set(movers.map(m => m.id));
   const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
   const newOveralls = overalls
-    .filter(o => !moverIds.has(o.id) && new Date(o.created_at).getTime() > fourteenDaysAgo)
+    .filter(o => !usedIds.has(o.id) && new Date(o.created_at).getTime() > fourteenDaysAgo)
     .slice(0, 4)
     .map(o => ({ ...o, isNew: true }));
-  const tickerItems = [...movers, ...newOveralls];
+  newOveralls.forEach(o => usedIds.add(o.id));
+
+  const TICKER_MIN_ITEMS = 6;
+  const combined = [...movers, ...newOveralls];
+  const recentlyUpdated = combined.length < TICKER_MIN_ITEMS
+    ? overalls
+      .filter(o => !usedIds.has(o.id))
+      .slice()
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+      .slice(0, TICKER_MIN_ITEMS - combined.length)
+    : [];
+  const tickerItems = [...combined, ...recentlyUpdated];
 
   const topRanked = overalls.slice().sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1))[0];
   const isTopRanked = Boolean(hero && topRanked && hero.id === topRanked.id);
