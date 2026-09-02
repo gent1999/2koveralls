@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Footer from '../components/Footer';
+import Hero from '../components/Hero';
 import OverallCard from '../components/OverallCard';
 import MovementBadge from '../components/MovementBadge';
-import TierBadge, { TIER_LABELS } from '../components/TierBadge';
+import { TIER_LABELS } from '../components/TierBadge';
 import SectionHeader from '../components/SectionHeader';
 import TrendingTicker from '../components/TrendingTicker';
 import ArticleCard from '../components/ArticleCard';
@@ -89,7 +90,8 @@ export default function Home() {
     .map(o => ({ ...o, isNew: true }));
   const tickerItems = [...movers, ...newOveralls];
 
-  const heroAttributes = hero?.attributes && typeof hero.attributes === 'object' ? Object.entries(hero.attributes) : [];
+  const topRanked = overalls.slice().sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1))[0];
+  const isTopRanked = Boolean(hero && topRanked && hero.id === topRanked.id);
 
   const otherWriteUps = writeUps.filter(a => a.id !== featuredArticle?.id).slice(0, 4);
 
@@ -109,80 +111,7 @@ export default function Home() {
       </Helmet>
 
       {/* HERO */}
-      <section className="grain border-b border-ink-line">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-20">
-          <div className="flex flex-col justify-center">
-            <h1 className="font-display text-5xl uppercase leading-[0.95] text-bone sm:text-6xl lg:text-7xl">
-              Rap Has
-              <br />
-              <span className="text-brand">Stats Now.</span>
-            </h1>
-            <p className="mt-6 max-w-md text-base text-bone-dim">
-              Objective ratings. Real debates. The culture's board.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              {hero && (
-                <Link
-                  to={`/overalls/${hero.slug}`}
-                  className="border border-brand bg-brand px-6 py-3 text-sm font-bold uppercase tracking-wider text-ink transition-colors hover:bg-transparent hover:text-brand"
-                >
-                  View Rating
-                </Link>
-              )}
-              <Link
-                to="/overalls"
-                className="border border-ink-line px-6 py-3 text-sm font-bold uppercase tracking-wider text-bone transition-colors hover:border-brand hover:text-brand"
-              >
-                Read Why
-              </Link>
-            </div>
-          </div>
-
-          {hero ? (
-            <Link to={`/overalls/${hero.slug}`} className="group relative block border border-ink-line bg-ink-soft">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img
-                  src={hero.image_url}
-                  alt={hero.title}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  style={{
-                    objectPosition: `${hero.hero_crop_x ?? hero.crop_x ?? 50}% ${hero.hero_crop_y ?? hero.crop_y ?? 50}%`,
-                    transform: `scale(${(hero.hero_crop_zoom ?? hero.crop_zoom ?? 100) / 100})`,
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                {typeof hero.overall === 'number' && (
-                  <div className="absolute right-0 top-0 bg-brand px-4 py-2 font-display text-4xl leading-none text-ink sm:text-5xl">
-                    {hero.overall} <span className="text-lg">OVR</span>
-                  </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <h2 className="font-display text-3xl uppercase text-bone drop-shadow-lg">{hero.title}</h2>
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-bone-dim">
-                    <MovementBadge change={hero.change} />
-                    {hero.artist_tier && <TierBadge tier={hero.artist_tier} />}
-                    {hero.location && <span>{hero.location}</span>}
-                  </div>
-                </div>
-              </div>
-              {heroAttributes.length > 0 && (
-                <div className="grid grid-cols-2 divide-x divide-y divide-ink-line border-t border-ink-line sm:grid-cols-3">
-                  {heroAttributes.slice(0, 6).map(([label, value]) => (
-                    <div key={label} className="flex items-center justify-between px-4 py-2 text-xs">
-                      <span className="uppercase tracking-wide text-bone-dim">{label}</span>
-                      <span className="font-display text-lg text-bone">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Link>
-          ) : (
-            <div className="flex aspect-[4/3] items-center justify-center border border-ink-line bg-ink-soft">
-              <p className="text-sm text-bone-dim">No featured Overall yet</p>
-            </div>
-          )}
-        </div>
-      </section>
+      <Hero hero={hero} isTopRanked={isTopRanked} />
 
       {/* TRENDING NOW */}
       <TrendingTicker items={tickerItems} />

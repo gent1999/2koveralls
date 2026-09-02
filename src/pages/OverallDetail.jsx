@@ -164,7 +164,7 @@ function OverallDetail() {
         <div className="flex flex-col gap-12 lg:flex-row">
           <div className="min-w-0 flex-1 space-y-12">
             {/* WHY */}
-            <div>
+            <div id="why" className="scroll-mt-24">
               <h2 className="font-display text-2xl uppercase text-bone">Why {overall.overall ?? ''}?</h2>
               <div className="mt-4 max-w-none">
                 <ReactMarkdown
