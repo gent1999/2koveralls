@@ -52,7 +52,7 @@ export default function About() {
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-black">Stay Connected</h2>
             <p>
-              Follow us on Instagram <a href="https://www.instagram.com/lowkeygrid" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 font-medium">@lowkeygrid</a> for daily updates, and check out our 2K Overalls page <a href="https://www.instagram.com/2k_overalls" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 font-medium">@2k_overalls</a> for the latest ratings.
+              Follow us on Instagram <a href="https://www.instagram.com/2k_overalls" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 font-medium">@2k_overalls</a> for daily updates and the latest ratings.
             </p>
 
             <p>
