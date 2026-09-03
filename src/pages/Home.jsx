@@ -14,6 +14,7 @@ import ArticleCard from '../components/ArticleCard';
 import LatestSideCard from '../components/LatestSideCard';
 import PlaylistCard from '../components/PlaylistCard';
 import SpotifyEmbed from '../components/SpotifyEmbed';
+import CommunityCTA from '../components/CommunityCTA';
 import { generateNewsUrl } from '../utils/slugify';
 import { stripMarkdown } from '../utils/markdownUtils';
 
@@ -81,8 +82,6 @@ export default function Home() {
     .slice(0, 6);
 
   const boardTrends = trends.slice(0, 4);
-
-  const recentlyRated = overalls.slice().sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 8);
 
   const rookieClass = overalls
     .filter(o => o.artist_tier === 'rising')
@@ -290,21 +289,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* RECENTLY RATED */}
-      {recentlyRated.length > 0 && (
-        <section className="border-t border-ink-line">
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-            <SectionHeader title="Recently Rated" viewAllTo="/overalls?sort=updated" />
-            <div className="scrollbar-none flex gap-4 overflow-x-auto sm:grid sm:grid-cols-4 sm:overflow-visible lg:grid-cols-8">
-              {recentlyRated.map((o) => (
-                <div key={o.id} className="w-32 flex-shrink-0 sm:w-auto">
-                  <OverallCard overall={o} size="small" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      <CommunityCTA thumbnails={overalls.slice(0, 5)} />
 
       <Footer />
     </div>
