@@ -11,7 +11,9 @@ import { TIER_LABELS } from '../components/TierBadge';
 import SectionHeader from '../components/SectionHeader';
 import TrendingTicker from '../components/TrendingTicker';
 import ArticleCard from '../components/ArticleCard';
+import LatestSideCard from '../components/LatestSideCard';
 import PlaylistCard from '../components/PlaylistCard';
+import SpotifyEmbed from '../components/SpotifyEmbed';
 import { generateNewsUrl } from '../utils/slugify';
 import { stripMarkdown } from '../utils/markdownUtils';
 
@@ -56,8 +58,10 @@ export default function Home() {
         if (lkgFeaturedRes?.article) {
           setFeaturedArticle(lkgFeaturedRes.article);
         } else {
-          const cryRes = await fetch(`${API_URL}/api/articles/featured/article`).then(r => r.json()).catch(() => ({ article: null }));
-          setFeaturedArticle(cryRes?.article || null);
+          // This endpoint returns { articles: [...] } (up to 5 featured, or 3
+          // latest as a fallback) — take the first one.
+          const cryRes = await fetch(`${API_URL}/api/articles/featured/article`).then(r => r.json()).catch(() => ({ articles: [] }));
+          setFeaturedArticle(cryRes?.articles?.[0] || null);
         }
       } catch (error) {
         console.error('Error fetching home data:', error);
@@ -113,7 +117,7 @@ export default function Home() {
   const topRanked = overalls.slice().sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1))[0];
   const isTopRanked = Boolean(hero && topRanked && hero.id === topRanked.id);
 
-  const otherWriteUps = writeUps.filter(a => a.id !== featuredArticle?.id).slice(0, 4);
+  const otherWriteUps = writeUps.filter(a => a.id !== featuredArticle?.id).slice(0, 2);
 
   if (loading) {
     return (
@@ -216,29 +220,46 @@ export default function Home() {
         </section>
       )}
 
-      {/* THE LATEST */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <SectionHeader title="The Latest" viewAllTo="/news" />
-        {featuredArticle || otherWriteUps.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {featuredArticle && (
-              <ArticleCard
-                article={featuredArticle}
-                to={generateNewsUrl(featuredArticle.id, featuredArticle.title)}
-                featured
-              />
+      {/* THE LATEST + AUX: PLAYLISTS — two independent, side-by-side sections */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_340px] lg:items-stretch">
+          {/* THE LATEST */}
+          <div>
+            <SectionHeader
+              title="The Latest"
+              subtitle="New music, interviews, reviews, and everything moving rap."
+              viewAllTo="/news"
+            />
+            {featuredArticle || otherWriteUps.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-[3fr_2fr]">
+                {featuredArticle && (
+                  <ArticleCard
+                    article={featuredArticle}
+                    to={generateNewsUrl(featuredArticle.id, featuredArticle.title)}
+                    featured
+                  />
+                )}
+                <div className="flex flex-col gap-4">
+                  {otherWriteUps.map((a) => (
+                    <LatestSideCard key={a.id} article={a} to={generateNewsUrl(a.id, a.title)} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="border border-ink-line bg-ink-soft p-10 text-center text-sm text-bone-dim">
+                No coverage yet. Check back soon.
+              </p>
             )}
-            <div className="flex flex-col gap-4">
-              {otherWriteUps.map((a) => (
-                <ArticleCard key={a.id} article={a} to={generateNewsUrl(a.id, a.title)} />
-              ))}
+          </div>
+
+          {/* AUX: PLAYLISTS — the real "Home Page" Spotify embed set via the admin's Spotify Manager */}
+          <div className="flex flex-col">
+            <SectionHeader title="AUX: Playlists" viewAllTo="/playlists" />
+            <div className="h-[450px] overflow-hidden border border-ink-line bg-ink-soft lg:h-auto lg:flex-1">
+              <SpotifyEmbed pageType="home" />
             </div>
           </div>
-        ) : (
-          <p className="border border-ink-line bg-ink-soft p-10 text-center text-sm text-bone-dim">
-            No coverage yet. Check back soon.
-          </p>
-        )}
+        </div>
       </section>
 
       {/* ROOKIE CLASS */}

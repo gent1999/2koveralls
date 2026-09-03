@@ -29,15 +29,7 @@ const SpotifyEmbed = ({ pageType = 'home' }) => {
   }, [pageType]);
 
   if (loading) {
-    return (
-      <div className="w-full space-y-3">
-        {[...Array(1)].map((_, i) => (
-          <div key={i} className="bg-gray-50 rounded-lg p-2 animate-pulse">
-            <div className="h-64 bg-gray-200 rounded-lg"></div>
-          </div>
-        ))}
-      </div>
-    );
+    return <div className="h-full w-full animate-pulse bg-ink-raised" />;
   }
 
   // Don't show if no embeds exist for this page type
