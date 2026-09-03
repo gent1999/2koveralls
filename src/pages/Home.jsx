@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import Footer from '../components/Footer';
 import Hero from '../components/Hero';
 import OverallCard from '../components/OverallCard';
+import BoardCarousel from '../components/BoardCarousel';
+import TrendCard from '../components/TrendCard';
 import MovementBadge from '../components/MovementBadge';
 import { TIER_LABELS } from '../components/TierBadge';
 import SectionHeader from '../components/SectionHeader';
@@ -23,6 +25,7 @@ export default function Home() {
   const [stockWatch, setStockWatch] = useState({ up: [], down: [] });
   const [featuredArticle, setFeaturedArticle] = useState(null);
   const [writeUps, setWriteUps] = useState([]);
+  const [trends, setTrends] = useState([]);
   const [playlists, setPlaylists] = useState([]);
   const [boardTier, setBoardTier] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -31,13 +34,14 @@ export default function Home() {
     const fetchData = async () => {
       try {
         const [
-          heroRes, overallsRes, stockRes, lkgFeaturedRes, writeUpsRes, playlistsRes,
+          heroRes, overallsRes, stockRes, lkgFeaturedRes, writeUpsRes, trendsRes, playlistsRes,
         ] = await Promise.all([
           fetch(`${API_URL}/api/overalls/featured/hero`).then(r => r.json()).catch(() => null),
           fetch(`${API_URL}/api/overalls`).then(r => r.json()).catch(() => []),
           fetch(`${API_URL}/api/overalls/stock-watch`).then(r => r.json()).catch(() => ({ up: [], down: [] })),
           fetch(`${API_URL}/api/lowkeygrid/articles/featured/article`).then(r => r.json()).catch(() => ({ article: null })),
           fetch(`${API_URL}/api/lowkeygrid/articles/writeups`).then(r => r.json()).catch(() => []),
+          fetch(`${API_URL}/api/lowkeygrid/articles`).then(r => r.json()).catch(() => []),
           fetch(`${API_URL}/api/spotify-embeds?site=lowkeygrid&page_type=playlist`).then(r => r.json()).catch(() => ({ embeds: [] })),
         ]);
 
@@ -45,6 +49,7 @@ export default function Home() {
         setOveralls(Array.isArray(overallsRes) ? overallsRes : []);
         setStockWatch(stockRes || { up: [], down: [] });
         setWriteUps(Array.isArray(writeUpsRes) ? writeUpsRes : []);
+        setTrends(Array.isArray(trendsRes) ? trendsRes : []);
         setPlaylists(playlistsRes?.embeds || []);
 
         // 2koveralls' own featured article first; fall back to Cry808's featured article
@@ -69,7 +74,9 @@ export default function Home() {
   const boardOveralls = (boardTier === 'all' ? overalls : overalls.filter(o => o.artist_tier === boardTier))
     .slice()
     .sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1))
-    .slice(0, 8);
+    .slice(0, 6);
+
+  const boardTrends = trends.slice(0, 4);
 
   const recentlyRated = overalls.slice().sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 8);
 
@@ -129,37 +136,49 @@ export default function Home() {
       {/* TRENDING NOW */}
       <TrendingTicker items={tickerItems} />
 
-      {/* THE BOARD */}
+      {/* THE BOARD + TRENDS — two independent, side-by-side sections */}
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <SectionHeader title="The Board" subtitle="Who's up. Who's falling. Who's next." viewAllTo="/overalls">
-          <div className="scrollbar-none flex gap-2 overflow-x-auto">
-            {['all', ...availableTiers].map((t) => (
-              <button
-                key={t}
-                onClick={() => setBoardTier(t)}
-                className={`flex-shrink-0 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors ${
-                  boardTier === t ? 'border-brand bg-brand text-ink' : 'border-ink-line text-bone-dim hover:text-brand'
-                }`}
-              >
-                {t === 'all' ? 'All' : TIER_LABELS[t]}
-              </button>
-            ))}
-          </div>
-        </SectionHeader>
-
-        {boardOveralls.length > 0 ? (
-          <div className="scrollbar-none flex gap-4 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-4">
-            {boardOveralls.map((o) => (
-              <div key={o.id} className="w-40 flex-shrink-0 sm:w-auto">
-                <OverallCard overall={o} size="medium" />
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:items-start">
+          {/* THE BOARD */}
+          <div>
+            <SectionHeader title="The Board" subtitle="Who's up. Who's falling. Who's next." viewAllTo="/overalls">
+              <div className="scrollbar-none flex gap-2 overflow-x-auto">
+                {['all', ...availableTiers].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setBoardTier(t)}
+                    className={`flex-shrink-0 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors ${
+                      boardTier === t ? 'border-brand bg-brand text-ink' : 'border-ink-line text-bone-dim hover:text-brand'
+                    }`}
+                  >
+                    {t === 'all' ? 'All' : TIER_LABELS[t]}
+                  </button>
+                ))}
               </div>
-            ))}
+            </SectionHeader>
+
+            {boardOveralls.length > 0 ? (
+              <BoardCarousel overalls={boardOveralls} />
+            ) : (
+              <p className="border border-ink-line bg-ink-soft p-10 text-center text-sm text-bone-dim">
+                No Overalls in this class yet.
+              </p>
+            )}
           </div>
-        ) : (
-          <p className="border border-ink-line bg-ink-soft p-10 text-center text-sm text-bone-dim">
-            No Overalls in this class yet.
-          </p>
-        )}
+
+          {/* TRENDS: 2x2, each card fixed at 16:9 (matches the admin crop tool
+              exactly) so the whole picture shows with no further cropping */}
+          {boardTrends.length > 0 && (
+            <div>
+              <SectionHeader title="Trends" viewAllTo="/news" />
+              <div className="grid grid-cols-2 gap-4">
+                {boardTrends.map((t) => (
+                  <TrendCard key={t.id} article={t} to={generateNewsUrl(t.id, t.title)} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* STOCK WATCH */}
