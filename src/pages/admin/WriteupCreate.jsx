@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import ImageCropper from '../../components/ImageCropper';
+import MediaLinksFields from '../../components/admin/MediaLinksFields';
 
 const inputClass = 'w-full border border-ink-line bg-ink px-3 py-2.5 text-sm text-bone placeholder-bone-dim focus:border-brand focus:outline-none';
 const labelClass = 'mb-2 block text-xs font-medium uppercase tracking-wide text-bone-dim';
@@ -14,6 +15,9 @@ function WriteupCreate() {
   const [tags, setTags] = useState('');
   const [category, setCategory] = useState('article');
   const [instagramLink, setInstagramLink] = useState('');
+  const [spotifyUrl, setSpotifyUrl] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [soundcloudUrl, setSoundcloudUrl] = useState('');
   const [image, setImage] = useState(null);
   const [thumbnail, setThumbnail] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -87,6 +91,15 @@ function WriteupCreate() {
       }
       if (instagramLink) {
         formData.append('instagram_link', instagramLink);
+      }
+      if (spotifyUrl) {
+        formData.append('spotify_url', spotifyUrl);
+      }
+      if (youtubeUrl) {
+        formData.append('youtube_url', youtubeUrl);
+      }
+      if (soundcloudUrl) {
+        formData.append('soundcloud_url', soundcloudUrl);
       }
       if (image) {
         formData.append('image', image);
@@ -254,6 +267,21 @@ function WriteupCreate() {
             />
             <p className="mt-1 text-xs text-bone-dim">
               Link to the Instagram post for this article
+            </p>
+          </div>
+
+          <div>
+            <label className={labelClass}>Media Embeds</label>
+            <MediaLinksFields
+              spotifyUrl={spotifyUrl}
+              onSpotifyUrlChange={setSpotifyUrl}
+              youtubeUrl={youtubeUrl}
+              onYoutubeUrlChange={setYoutubeUrl}
+              soundcloudUrl={soundcloudUrl}
+              onSoundcloudUrlChange={setSoundcloudUrl}
+            />
+            <p className="mt-1 text-xs text-bone-dim">
+              Any of these will render as an embedded player on the article page.
             </p>
           </div>
 

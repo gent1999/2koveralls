@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import ImageCropper from '../../components/ImageCropper';
+import MediaLinksFields from '../../components/admin/MediaLinksFields';
 
 const inputClass = 'w-full border border-ink-line bg-ink px-3 py-2.5 text-sm text-bone placeholder-bone-dim focus:border-brand focus:outline-none';
 const labelClass = 'mb-2 block text-xs font-medium uppercase tracking-wide text-bone-dim';
@@ -15,6 +16,9 @@ function ArticleEdit() {
   const [tags, setTags] = useState('');
   const [category, setCategory] = useState('trends');
   const [instagramLink, setInstagramLink] = useState('');
+  const [spotifyUrl, setSpotifyUrl] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [soundcloudUrl, setSoundcloudUrl] = useState('');
   const [image, setImage] = useState(null);
   const [thumbnail, setThumbnail] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -57,6 +61,9 @@ function ArticleEdit() {
       setCategory(data.category || 'trends');
       setTags(data.tags ? data.tags.join(', ') : '');
       setInstagramLink(data.instagram_link || '');
+      setSpotifyUrl(data.spotify_url || '');
+      setYoutubeUrl(data.youtube_url || '');
+      setSoundcloudUrl(data.soundcloud_url || '');
       setExistingImage(data.image_url || '');
       setImagePreview(data.image_url || '');
       setThumbnailPreview(data.thumbnail_url || '');
@@ -120,6 +127,15 @@ function ArticleEdit() {
       }
       if (instagramLink) {
         formData.append('instagram_link', instagramLink);
+      }
+      if (spotifyUrl) {
+        formData.append('spotify_url', spotifyUrl);
+      }
+      if (youtubeUrl) {
+        formData.append('youtube_url', youtubeUrl);
+      }
+      if (soundcloudUrl) {
+        formData.append('soundcloud_url', soundcloudUrl);
       }
       if (image) {
         formData.append('image', image);
@@ -296,6 +312,21 @@ function ArticleEdit() {
             />
             <p className="mt-1 text-xs text-bone-dim">
               Link to the Instagram post for this article
+            </p>
+          </div>
+
+          <div>
+            <label className={labelClass}>Media Embeds</label>
+            <MediaLinksFields
+              spotifyUrl={spotifyUrl}
+              onSpotifyUrlChange={setSpotifyUrl}
+              youtubeUrl={youtubeUrl}
+              onYoutubeUrlChange={setYoutubeUrl}
+              soundcloudUrl={soundcloudUrl}
+              onSoundcloudUrlChange={setSoundcloudUrl}
+            />
+            <p className="mt-1 text-xs text-bone-dim">
+              Any of these will render as an embedded player on the article page.
             </p>
           </div>
 
