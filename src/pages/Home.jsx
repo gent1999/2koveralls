@@ -37,13 +37,13 @@ export default function Home() {
     const fetchData = async () => {
       try {
         const [
-          heroRes, overallsRes, stockRes, lkgFeaturedRes, writeUpsRes, trendsRes, playlistsRes,
+          heroRes, overallsRes, stockRes, koverallsFeaturedRes, koverallsWriteUpsRes, trendsRes, playlistsRes,
         ] = await Promise.all([
           fetch(`${API_URL}/api/overalls/featured/hero`).then(r => r.json()).catch(() => null),
           fetch(`${API_URL}/api/overalls`).then(r => r.json()).catch(() => []),
           fetch(`${API_URL}/api/overalls/stock-watch`).then(r => r.json()).catch(() => ({ up: [], down: [] })),
-          fetch(`${API_URL}/api/lowkeygrid/articles/featured/article`).then(r => r.json()).catch(() => ({ article: null })),
-          fetch(`${API_URL}/api/lowkeygrid/articles/writeups`).then(r => r.json()).catch(() => []),
+          fetch(`${API_URL}/api/koveralls-articles/featured/article`).then(r => r.json()).catch(() => ({ article: null })),
+          fetch(`${API_URL}/api/koveralls-articles`).then(r => r.json()).catch(() => []),
           fetch(`${API_URL}/api/lowkeygrid/articles`).then(r => r.json()).catch(() => []),
           fetch(`${API_URL}/api/spotify-embeds?site=lowkeygrid&page_type=playlist`).then(r => r.json()).catch(() => ({ embeds: [] })),
         ]);
@@ -51,13 +51,23 @@ export default function Home() {
         setHero(heroRes);
         setOveralls(Array.isArray(overallsRes) ? overallsRes : []);
         setStockWatch(stockRes || { up: [], down: [] });
-        setWriteUps(Array.isArray(writeUpsRes) ? writeUpsRes : []);
         setTrends(Array.isArray(trendsRes) ? trendsRes : []);
         setPlaylists(playlistsRes?.embeds || []);
 
-        // 2koveralls' own featured article first; fall back to Cry808's featured article
-        if (lkgFeaturedRes?.article) {
-          setFeaturedArticle(lkgFeaturedRes.article);
+        // Native 2koveralls write-ups first; only fall back to Cry808's
+        // cross-promoted article/interview content when there's nothing
+        // native yet, so "The Latest" is never empty.
+        const nativeWriteUps = Array.isArray(koverallsWriteUpsRes) ? koverallsWriteUpsRes : [];
+        if (nativeWriteUps.length > 0) {
+          setWriteUps(nativeWriteUps);
+        } else {
+          const fallbackRes = await fetch(`${API_URL}/api/lowkeygrid/articles/writeups`).then(r => r.json()).catch(() => []);
+          setWriteUps(Array.isArray(fallbackRes) ? fallbackRes : []);
+        }
+
+        // 2koveralls' own featured write-up first; fall back to Cry808's featured article
+        if (koverallsFeaturedRes?.article) {
+          setFeaturedArticle(koverallsFeaturedRes.article);
         } else {
           // This endpoint returns { articles: [...] } (up to 5 featured, or 3
           // latest as a fallback) — take the first one.

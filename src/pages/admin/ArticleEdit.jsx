@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import AdminLayout from '../../components/admin/AdminLayout';
 import ImageCropper from '../../components/ImageCropper';
+
+const inputClass = 'w-full border border-ink-line bg-ink px-3 py-2.5 text-sm text-bone placeholder-bone-dim focus:border-brand focus:outline-none';
+const labelClass = 'mb-2 block text-xs font-medium uppercase tracking-wide text-bone-dim';
 
 function ArticleEdit() {
   const { id } = useParams();
+  const [admin, setAdmin] = useState(null);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
@@ -29,6 +34,8 @@ function ArticleEdit() {
       navigate('/admin/login');
       return;
     }
+    const adminInfo = localStorage.getItem('adminInfo');
+    if (adminInfo) setAdmin(JSON.parse(adminInfo));
 
     fetchArticle();
   }, [id, navigate]);
@@ -59,6 +66,12 @@ function ArticleEdit() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminInfo');
+    navigate('/admin/login');
   };
 
   const handleImageChange = (e) => {
@@ -138,122 +151,107 @@ function ArticleEdit() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-ink text-bone-dim">
+        Loading...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Edit Article</h1>
-            <Link
-              to="/admin/articles"
-              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-            >
-              Back to List
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout
+      admin={admin}
+      onLogout={handleLogout}
+      title="Edit Trend"
+      actions={
+        <button
+          onClick={() => navigate('/admin/articles')}
+          className="border border-ink-line px-4 py-2 text-xs font-bold uppercase tracking-wider text-bone-dim transition-colors hover:border-bone hover:text-bone"
+        >
+          Back to List
+        </button>
+      }
+    >
+      <div className="mx-auto max-w-4xl">
         {error && (
-          <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="mb-4 border border-down/30 bg-down/10 px-4 py-3 text-sm text-down">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 border border-ink-line bg-ink-soft p-6">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-              Title *
-            </label>
+            <label htmlFor="title" className={labelClass}>Title *</label>
             <input
               type="text"
               id="title"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
               placeholder="Article title"
             />
           </div>
 
           <div>
-            <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-2">
-              Author *
-            </label>
+            <label htmlFor="author" className={labelClass}>Author *</label>
             <input
               type="text"
               id="author"
               required
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
               placeholder="Author name"
             />
           </div>
 
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-              Category *
-            </label>
+            <label htmlFor="category" className={labelClass}>Category *</label>
             <select
               id="category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
+              disabled
             >
-              <option value="trends">Trends (News list on 2koveralls)</option>
-              <option value="article">Article (Shared with Cry808)</option>
-              <option value="interview">Interview (Shared with Cry808)</option>
-              <option value="review">Review</option>
-              <option value="editorial">Editorial</option>
-              <option value="rating_update">Rating Update</option>
-              <option value="rankings">Rankings</option>
+              <option value="trends">Trends</option>
             </select>
-            <p className="mt-2 text-sm text-gray-500">
-              'Trends' appears on the /news list. All categories show up in The Latest / Related Coverage and have their own detail page.
+            <p className="mt-2 text-xs text-bone-dim">
+              Appears on the /news list and in the homepage ticker. Full write-up articles are managed under "All Articles" instead.
             </p>
           </div>
 
           <div>
-            <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
-              Cover Image
-            </label>
+            <label htmlFor="image" className={labelClass}>Cover Image</label>
             <input
               type="file"
               id="image"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`${inputClass} file:mr-3 file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-xs file:font-bold file:uppercase file:text-ink`}
             />
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-xs text-bone-dim">
               Leave empty to keep current image
             </p>
             {imagePreview && (
               <div className="mt-4 space-y-4">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">
+                  <p className="mb-1 text-xs text-bone-dim">
                     {image ? 'New original (shown on article page):' : 'Current image (shown on article page):'}
                   </p>
                   <img
                     src={imagePreview}
                     alt="Original preview"
-                    className="max-w-md rounded-lg shadow"
+                    className="max-w-md border border-ink-line"
                   />
                 </div>
                 {thumbnailPreview && (
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Cropped thumbnail (shown on homepage):</p>
+                    <p className="mb-1 text-xs text-bone-dim">Cropped thumbnail (shown on homepage):</p>
                     <img
                       src={thumbnailPreview}
                       alt="Thumbnail preview"
-                      className="max-w-md rounded-lg shadow"
+                      className="max-w-md border border-ink-line"
                     />
                   </div>
                 )}
@@ -263,7 +261,7 @@ function ArticleEdit() {
                     setOriginalImage(imagePreview);
                     setShowCropper(true);
                   }}
-                  className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                  className="text-sm font-medium text-brand hover:text-bone"
                 >
                   {thumbnailPreview ? 'Re-crop thumbnail' : 'Crop thumbnail for homepage'}
                 </button>
@@ -272,68 +270,63 @@ function ArticleEdit() {
           </div>
 
           <div>
-            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-              Tags
-            </label>
+            <label htmlFor="tags" className={labelClass}>Tags</label>
             <input
               type="text"
               id="tags"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
               placeholder="hip-hop, rap, news (comma separated)"
             />
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-xs text-bone-dim">
               Separate tags with commas
             </p>
           </div>
 
           <div>
-            <label htmlFor="instagramLink" className="block text-sm font-medium text-gray-700 mb-2">
-              Instagram Link
-            </label>
+            <label htmlFor="instagramLink" className={labelClass}>Instagram Link</label>
             <input
               type="url"
               id="instagramLink"
               value={instagramLink}
               onChange={(e) => setInstagramLink(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
               placeholder="https://www.instagram.com/p/..."
             />
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-xs text-bone-dim">
               Link to the Instagram post for this article
             </p>
           </div>
 
           <div>
-            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-              Content *
-            </label>
+            <label htmlFor="content" className={labelClass}>Content *</label>
             <textarea
               id="content"
               required
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={12}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
               placeholder="Article content (supports Markdown)..."
             />
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-xs text-bone-dim">
               Supports Markdown formatting
             </p>
           </div>
 
-          <div className="flex justify-end space-x-4">
-            <Link
-              to="/admin/articles"
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/admin/articles')}
+              className="border border-ink-line px-4 py-2 text-xs font-bold uppercase tracking-wider text-bone-dim transition-colors hover:border-bone hover:text-bone"
             >
               Cancel
-            </Link>
+            </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              className="border border-brand bg-brand px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink transition-colors hover:bg-brand-dim disabled:opacity-50"
             >
               {submitting ? 'Updating...' : 'Update Article'}
             </button>
@@ -350,7 +343,7 @@ function ArticleEdit() {
           aspectRatio={16 / 9}
         />
       )}
-    </div>
+    </AdminLayout>
   );
 }
 

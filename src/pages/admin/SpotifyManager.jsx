@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AdminLayout from '../../components/admin/AdminLayout';
+import { Panel, Pill } from '../../components/admin/ui';
+
+const inputClass = 'w-full border border-ink-line bg-ink px-3 py-2.5 text-sm text-bone placeholder-bone-dim focus:border-brand focus:outline-none';
+const labelClass = 'mb-2 block text-xs font-medium uppercase tracking-wide text-bone-dim';
 
 const SpotifyManager = () => {
   const navigate = useNavigate();
+  const [admin, setAdmin] = useState(null);
   const [embeds, setEmbeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [spotifyUrl, setSpotifyUrl] = useState('');
@@ -22,8 +28,16 @@ const SpotifyManager = () => {
       navigate('/admin/login');
       return;
     }
+    const adminInfo = localStorage.getItem('adminInfo');
+    if (adminInfo) setAdmin(JSON.parse(adminInfo));
     fetchEmbeds();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminInfo');
+    navigate('/admin/login');
+  };
 
   const fetchEmbeds = async () => {
     try {
@@ -135,190 +149,142 @@ const SpotifyManager = () => {
     return 'Home Page';
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-900 text-xl">Loading Spotify embeds...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Spotify &amp; Playlist Manager</h1>
-            <button
-              onClick={() => navigate('/admin/overalls')}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Dashboard
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Message */}
-        {message.text && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            message.type === 'success' ? 'bg-green-50 border border-green-400 text-green-700' : 'bg-red-50 border border-red-400 text-red-700'
-          }`}>
-            {message.text}
-          </div>
-        )}
-
-        {/* Form */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Add Spotify Embed / Playlist</h3>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-gray-700 mb-2 font-medium">
-                Page Type
-              </label>
-              <select
-                value={pageType}
-                onChange={(e) => setPageType(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="home">Home Page (sidebar embed)</option>
-                <option value="article">Article Page (sidebar embed)</option>
-                <option value="playlist">AUX Playlist (branded card, shown on homepage + /playlists)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-gray-700 mb-2 font-medium">
-                Paste Spotify Link
-              </label>
-              <input
-                type="text"
-                value={spotifyUrl}
-                onChange={(e) => setSpotifyUrl(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="https://open.spotify.com/playlist/... or https://open.spotify.com/album/..."
-                required
-              />
-            </div>
-
-            {pageType === 'playlist' && (
-              <>
-                <div>
-                  <label className="block text-gray-700 mb-2 font-medium">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="e.g., ROTATION"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2 font-medium">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="e.g., Current rap we're playing"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2 font-medium">
-                    Cover Image
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCoverChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  {coverPreview && (
-                    <img src={coverPreview} alt="Cover preview" className="mt-3 h-32 w-32 rounded-lg object-cover shadow" />
-                  )}
-                </div>
-                <label className="flex items-center gap-2 text-gray-700 font-medium">
-                  <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
-                  Featured (highlighted in AUX)
-                </label>
-              </>
-            )}
-
-            <button
-              type="submit"
-              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-lg transition transform hover:scale-105"
-            >
-              Add
-            </button>
-          </form>
-        </div>
-
-        {/* List of Embeds */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Existing Embeds</h3>
-
-          {embeds.length === 0 ? (
-            <p className="text-gray-500">No Spotify embeds yet. Add one above!</p>
-          ) : (
-            <div className="space-y-4">
-              {embeds.map((embed) => (
-                <div
-                  key={embed.id}
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-start justify-between"
-                >
-                  <div className="flex items-start gap-4 flex-1">
-                    {embed.cover_image_url && (
-                      <img src={embed.cover_image_url} alt={embed.title} className="h-16 w-16 rounded object-cover" />
-                    )}
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <h4 className="text-gray-900 font-semibold">{embed.title}</h4>
-                        <span className={`px-2 py-1 text-xs rounded ${
-                          embed.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                          {embed.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                        <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">
-                          {embed.embed_type}
-                        </span>
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
-                          {pageTypeLabel(embed.page_type)}
-                        </span>
-                        {embed.is_featured && (
-                          <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">Featured</span>
-                        )}
-                        <span className="text-gray-500 text-xs">Order: {embed.display_order}</span>
-                      </div>
-                      {embed.description && <p className="text-gray-600 text-sm mb-1">{embed.description}</p>}
-                      <p className="text-gray-500 text-sm truncate">{embed.spotify_url}</p>
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    <button
-                      onClick={() => handleDelete(embed.id)}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
+    <AdminLayout admin={admin} onLogout={handleLogout} title="Spotify Manager" subtitle="Manage embeds and AUX playlists">
+      {loading ? (
+        <div className="py-16 text-center text-sm text-bone-dim">Loading Spotify embeds...</div>
+      ) : (
+        <div className="space-y-8">
+          {message.text && (
+            <div className={`border px-4 py-3 text-sm ${
+              message.type === 'success' ? 'border-up/30 bg-up/10 text-up' : 'border-down/30 bg-down/10 text-down'
+            }`}>
+              {message.text}
             </div>
           )}
+
+          {/* Form */}
+          <Panel title="Add Spotify Embed / Playlist" icon="spotify">
+            <form onSubmit={handleSubmit} className="space-y-4 p-5">
+              <div>
+                <label className={labelClass}>Page Type</label>
+                <select
+                  value={pageType}
+                  onChange={(e) => setPageType(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="home">Home Page (sidebar embed)</option>
+                  <option value="article">Article Page (sidebar embed)</option>
+                  <option value="playlist">AUX Playlist (branded card, shown on homepage + /playlists)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={labelClass}>Paste Spotify Link</label>
+                <input
+                  type="text"
+                  value={spotifyUrl}
+                  onChange={(e) => setSpotifyUrl(e.target.value)}
+                  className={inputClass}
+                  placeholder="https://open.spotify.com/playlist/... or https://open.spotify.com/album/..."
+                  required
+                />
+              </div>
+
+              {pageType === 'playlist' && (
+                <>
+                  <div>
+                    <label className={labelClass}>Title</label>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className={inputClass}
+                      placeholder="e.g., ROTATION"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Description</label>
+                    <input
+                      type="text"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className={inputClass}
+                      placeholder="e.g., Current rap we're playing"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Cover Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverChange}
+                      className={`${inputClass} file:mr-3 file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-xs file:font-bold file:uppercase file:text-ink`}
+                    />
+                    {coverPreview && (
+                      <img src={coverPreview} alt="Cover preview" className="mt-3 h-32 w-32 border border-ink-line object-cover" />
+                    )}
+                  </div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-bone-dim">
+                    <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} className="accent-brand" />
+                    Featured (highlighted in AUX)
+                  </label>
+                </>
+              )}
+
+              <button
+                type="submit"
+                className="border border-brand bg-brand px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-ink transition-colors hover:bg-brand-dim"
+              >
+                Add
+              </button>
+            </form>
+          </Panel>
+
+          {/* List of Embeds */}
+          <Panel title="Existing Embeds" icon="list">
+            <div className="p-5">
+              {embeds.length === 0 ? (
+                <p className="text-sm text-bone-dim">No Spotify embeds yet. Add one above!</p>
+              ) : (
+                <div className="space-y-3">
+                  {embeds.map((embed) => (
+                    <div
+                      key={embed.id}
+                      className="flex items-start justify-between gap-4 border border-ink-line bg-ink p-4"
+                    >
+                      <div className="flex flex-1 items-start gap-4">
+                        {embed.cover_image_url && (
+                          <img src={embed.cover_image_url} alt={embed.title} className="h-16 w-16 border border-ink-line object-cover" />
+                        )}
+                        <div className="flex-1">
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            <h4 className="font-semibold text-bone">{embed.title}</h4>
+                            <Pill tone={embed.is_active ? 'up' : 'down'}>{embed.is_active ? 'Active' : 'Inactive'}</Pill>
+                            <Pill tone="brand">{embed.embed_type}</Pill>
+                            <Pill tone="slate">{pageTypeLabel(embed.page_type)}</Pill>
+                            {embed.is_featured && <Pill tone="brand">Featured</Pill>}
+                            <span className="text-xs text-bone-dim">Order: {embed.display_order}</span>
+                          </div>
+                          {embed.description && <p className="mb-1 text-sm text-bone-dim">{embed.description}</p>}
+                          <p className="truncate text-sm text-bone-dim">{embed.spotify_url}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDelete(embed.id)}
+                        className="flex-shrink-0 border border-down/30 px-4 py-2 text-sm text-down transition-colors hover:bg-down/10"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Panel>
         </div>
-      </main>
-    </div>
+      )}
+    </AdminLayout>
   );
 };
 

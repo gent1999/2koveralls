@@ -29,6 +29,13 @@ function NewsDetail() {
 
   const fetchArticle = async () => {
     try {
+      // Native 2koveralls write-ups first, then Trends / Cry808 cross-promoted
+      // content in the shared table — the two tables have separate id spaces.
+      const nativeRes = await fetch(`${API_URL}/api/koveralls-articles/${id}`);
+      if (nativeRes.ok) {
+        setArticle(await nativeRes.json());
+        return;
+      }
       const response = await fetch(`${API_URL}/api/lowkeygrid/articles/${id}`);
       if (!response.ok) throw new Error('Article not found');
       const data = await response.json();
@@ -43,13 +50,15 @@ function NewsDetail() {
 
   const fetchMoreArticles = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/lowkeygrid/articles/writeups`);
-      if (response.ok) {
-        const data = await response.json();
-        const others = data.filter(a => a.id !== parseInt(id));
-        const shuffled = others.sort(() => 0.5 - Math.random());
-        setMoreArticles(shuffled.slice(0, 3));
-      }
+      const nativeRes = await fetch(`${API_URL}/api/koveralls-articles`);
+      const nativeData = nativeRes.ok ? await nativeRes.json() : [];
+      const source = Array.isArray(nativeData) && nativeData.length > 0
+        ? nativeData
+        : await fetch(`${API_URL}/api/lowkeygrid/articles/writeups`).then(r => r.json()).catch(() => []);
+
+      const others = (Array.isArray(source) ? source : []).filter(a => a.id !== parseInt(id));
+      const shuffled = others.sort(() => 0.5 - Math.random());
+      setMoreArticles(shuffled.slice(0, 3));
     } catch (err) {
       console.error('Failed to fetch more articles:', err);
     }

@@ -3,7 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { Pill, Icon } from '../../components/admin/ui';
 
-function ArticlesList() {
+const CATEGORY_LABELS = {
+  article: 'Feature',
+  interview: 'Interview',
+  review: 'Review',
+  editorial: 'Editorial',
+  rating_update: 'Rating Update',
+  rankings: 'Rankings',
+};
+
+function WriteupsList() {
   const [articles, setArticles] = useState([]);
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +36,7 @@ function ArticlesList() {
     const token = localStorage.getItem('adminToken');
 
     try {
-      const response = await fetch(`${API_URL}/api/lowkeygrid/articles/admin/all`, {
+      const response = await fetch(`${API_URL}/api/koveralls-articles/admin/all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -50,7 +59,7 @@ function ArticlesList() {
     const token = localStorage.getItem('adminToken');
 
     try {
-      const response = await fetch(`${API_URL}/api/lowkeygrid/articles/${id}`, {
+      const response = await fetch(`${API_URL}/api/koveralls-articles/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -71,7 +80,7 @@ function ArticlesList() {
   const handleToggleFeature = async (article) => {
     const token = localStorage.getItem('adminToken');
     try {
-      const response = await fetch(`${API_URL}/api/lowkeygrid/articles/${article.id}/feature`, {
+      const response = await fetch(`${API_URL}/api/koveralls-articles/${article.id}/feature`, {
         method: article.is_featured ? 'DELETE' : 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -104,14 +113,14 @@ function ArticlesList() {
     <AdminLayout
       admin={admin}
       onLogout={handleLogout}
-      title="All Trends"
-      subtitle={`${articles.length} article${articles.length === 1 ? '' : 's'}`}
+      title="All Articles"
+      subtitle={`${articles.length} write-up${articles.length === 1 ? '' : 's'} · shown in "The Latest" on the homepage`}
       actions={
         <button
-          onClick={() => navigate('/admin/articles/create')}
+          onClick={() => navigate('/admin/writeups/create')}
           className="flex items-center gap-2 border border-brand bg-brand px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink transition-colors hover:bg-brand-dim"
         >
-          <Icon name="add" size={15} /> New Trend
+          <Icon name="add" size={15} /> New Article
         </button>
       }
     >
@@ -145,15 +154,11 @@ function ArticlesList() {
                       <h3 className="truncate text-lg font-semibold text-bone">
                         {article.title}
                       </h3>
-                      {article.category === 'trends' ? (
-                        <Pill tone="up">Public</Pill>
-                      ) : (
-                        <Pill tone="slate">{article.category}</Pill>
-                      )}
+                      <Pill tone="slate">{CATEGORY_LABELS[article.category] || article.category}</Pill>
                       {article.is_featured && <Pill tone="brand">Featured</Pill>}
                     </div>
                     <p className="text-sm text-bone-dim">
-                      By {article.author} • {formatDate(article.created_at)}
+                      By {article.author || 'Unknown'} • {formatDate(article.created_at)}
                     </p>
                     {article.tags && article.tags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
@@ -173,7 +178,7 @@ function ArticlesList() {
                       {article.is_featured ? 'Unfeature' : 'Feature'}
                     </button>
                     <button
-                      onClick={() => navigate(`/admin/articles/edit/${article.id}`)}
+                      onClick={() => navigate(`/admin/writeups/edit/${article.id}`)}
                       className="text-sm font-medium text-brand hover:text-bone"
                     >
                       Edit
@@ -195,4 +200,4 @@ function ArticlesList() {
   );
 }
 
-export default ArticlesList;
+export default WriteupsList;

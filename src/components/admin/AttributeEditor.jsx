@@ -20,7 +20,7 @@ export default function AttributeEditor({ rows, onChange }) {
             value={row.label}
             onChange={(e) => update(i, 'label', e.target.value)}
             placeholder="Attribute (e.g. Lyrics)"
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 border border-ink-line bg-ink px-3 py-2 text-bone placeholder-bone-dim focus:border-brand focus:outline-none"
           />
           <input
             type="number"
@@ -29,12 +29,12 @@ export default function AttributeEditor({ rows, onChange }) {
             value={row.value}
             onChange={(e) => update(i, 'value', e.target.value)}
             placeholder="0-99"
-            className="w-24 rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-24 border border-ink-line bg-ink px-3 py-2 text-bone placeholder-bone-dim focus:border-brand focus:outline-none"
           />
           <button
             type="button"
             onClick={() => removeRow(i)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-gray-500 hover:bg-gray-50"
+            className="border border-ink-line px-3 py-2 text-bone-dim transition-colors hover:border-down hover:text-down"
           >
             ✕
           </button>
@@ -43,7 +43,7 @@ export default function AttributeEditor({ rows, onChange }) {
       <button
         type="button"
         onClick={addRow}
-        className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+        className="text-sm font-medium text-brand hover:text-bone"
       >
         + Add attribute
       </button>

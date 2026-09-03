@@ -64,14 +64,14 @@ function ImageCropper({ imageSrc, onCropComplete, onCancel, aspectRatio = 16 / 9
   }, [completedCrop, onCropComplete]);
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Crop Image</h3>
-          <p className="text-sm text-gray-500">Adjust the crop area for the best display on the home page</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden border border-ink-line bg-ink-soft">
+        <div className="border-b border-ink-line p-4">
+          <h3 className="text-lg font-semibold text-bone">Crop Image</h3>
+          <p className="text-sm text-bone-dim">Adjust the crop area for the best display on the home page</p>
         </div>
 
-        <div className="p-4 overflow-auto max-h-[60vh] flex justify-center bg-gray-100">
+        <div className="flex max-h-[60vh] justify-center overflow-auto bg-ink p-4">
           <ReactCrop
             crop={crop}
             onChange={(c) => setCrop(c)}
@@ -84,25 +84,25 @@ function ImageCropper({ imageSrc, onCropComplete, onCancel, aspectRatio = 16 / 9
               alt="Crop preview"
               crossOrigin="anonymous"
               onLoad={onImageLoad}
-              className="max-w-full max-h-[55vh]"
+              className="max-h-[55vh] max-w-full"
             />
           </ReactCrop>
         </div>
 
-        <div className="p-4 border-t border-gray-200 flex justify-between items-center">
-          <div className="text-sm text-gray-500">
+        <div className="flex items-center justify-between border-t border-ink-line p-4">
+          <div className="text-sm text-bone-dim">
             Recommended: 16:9 aspect ratio for best display
           </div>
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="border border-ink-line px-4 py-2 text-sm font-medium text-bone-dim transition-colors hover:border-bone hover:text-bone"
             >
               Cancel
             </button>
             <button
               onClick={getCroppedImage}
-              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+              className="border border-brand bg-brand px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-brand-dim"
             >
               Apply Crop
             </button>

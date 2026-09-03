@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import AdminLayout from '../../components/admin/AdminLayout';
+import { Pill, Icon } from '../../components/admin/ui';
 
 function OverallsList() {
   const [overalls, setOveralls] = useState([]);
+  const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cropModal, setCropModal] = useState(null); // { overall, type: 'hero' | 'square' }
@@ -18,6 +21,8 @@ function OverallsList() {
       navigate('/admin/login');
       return;
     }
+    const adminInfo = localStorage.getItem('adminInfo');
+    if (adminInfo) setAdmin(JSON.parse(adminInfo));
     fetchOveralls();
   }, [navigate]);
 
@@ -213,181 +218,149 @@ function OverallsList() {
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminInfo');
     navigate('/admin/login');
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
 
   const squareFeaturedCount = overalls.filter(o => o.is_square_featured).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">2K Overalls Admin</h1>
-            <div className="flex space-x-4">
-              <Link
-                to="/admin/articles"
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-              >
-                News Articles
-              </Link>
-              <Link
-                to="/admin/spotify"
-                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
-              >
-                Spotify Playlists
-              </Link>
-              <Link
-                to="/admin/overalls/create"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                Create New Overall
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-              >
-                Logout
-              </button>
+    <AdminLayout
+      admin={admin}
+      onLogout={handleLogout}
+      title="All Overalls"
+      subtitle={`${overalls.length} artist${overalls.length === 1 ? '' : 's'} rated`}
+      actions={
+        <button
+          onClick={() => navigate('/admin/overalls/create')}
+          className="flex items-center gap-2 border border-brand bg-brand px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink transition-colors hover:bg-brand-dim"
+        >
+          <Icon name="add" size={15} /> New Overall
+        </button>
+      }
+    >
+      {loading ? (
+        <div className="py-16 text-center text-sm text-bone-dim">Loading...</div>
+      ) : (
+        <>
+          {error && (
+            <div className="mb-4 border border-down/30 bg-down/10 px-4 py-3 text-sm text-down">
+              {error}
             </div>
-          </div>
-        </div>
-      </div>
+          )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+          {overalls.length === 0 ? (
+            <div className="border border-ink-line bg-ink-soft py-16 text-center text-sm text-bone-dim">
+              No overalls yet. Create your first one!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {overalls.map((overall) => (
+                <div key={overall.id} className="relative border border-ink-line bg-ink-soft">
+                  {/* Featured badges */}
+                  <div className="absolute right-2 top-2 z-10 flex gap-1">
+                    {overall.is_hero_featured && <Pill tone="brand">HERO</Pill>}
+                    {overall.is_square_featured && <Pill tone="slate">SQUARE</Pill>}
+                  </div>
 
-        {overalls.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No overalls yet. Create your first one!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {overalls.map((overall) => (
-              <div key={overall.id} className="bg-white rounded-lg shadow overflow-hidden relative">
-                {/* Featured badges */}
-                <div className="absolute top-2 right-2 z-10 flex gap-1">
-                  {overall.is_hero_featured && (
-                    <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">HERO</span>
-                  )}
-                  {overall.is_square_featured && (
-                    <span className="bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">SQUARE</span>
-                  )}
-                </div>
+                  <img
+                    src={overall.image_url}
+                    alt={overall.title}
+                    className="h-48 w-full object-cover"
+                  />
+                  <div className="p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <h3 className="text-lg font-semibold text-bone">
+                        {overall.title}
+                      </h3>
+                      {overall.artist_tier && <Pill tone="brand">{overall.artist_tier}</Pill>}
+                    </div>
+                    <p className="mb-3 line-clamp-2 text-sm text-bone-dim">
+                      {overall.content.substring(0, 100)}...
+                    </p>
 
-                <img
-                  src={overall.image_url}
-                  alt={overall.title}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {overall.title}
-                    </h3>
-                    {overall.artist_tier && (
-                      <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
-                        {overall.artist_tier}
-                      </span>
+                    {/* Featured controls */}
+                    <div className="mb-3 flex gap-2">
+                      <button
+                        onClick={() => handleHeroFeature(overall)}
+                        className={`flex-1 border py-1.5 px-2 text-xs font-semibold transition-colors ${
+                          overall.is_hero_featured
+                            ? 'border-brand bg-brand text-ink hover:bg-brand-dim'
+                            : 'border-ink-line text-bone-dim hover:border-brand hover:text-brand'
+                        }`}
+                      >
+                        {overall.is_hero_featured ? 'Remove Hero' : 'Set Hero'}
+                      </button>
+                      <button
+                        onClick={() => handleSquareFeature(overall)}
+                        className={`flex-1 border py-1.5 px-2 text-xs font-semibold transition-colors ${
+                          overall.is_square_featured
+                            ? 'border-bone bg-bone text-ink hover:bg-bone-dim'
+                            : 'border-ink-line text-bone-dim hover:border-bone hover:text-bone'
+                        }`}
+                      >
+                        {overall.is_square_featured ? 'Remove Square' : `Set Square (${squareFeaturedCount}/3)`}
+                      </button>
+                    </div>
+
+                    {/* Crop adjust buttons - only show if featured */}
+                    {overall.is_hero_featured && (
+                      <button
+                        onClick={() => openHeroCropEditor(overall)}
+                        className="mb-1 w-full border border-ink-line py-1.5 px-2 text-xs font-semibold text-bone-dim transition-colors hover:border-brand hover:text-brand"
+                      >
+                        Adjust Hero Crop (Left)
+                      </button>
                     )}
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                    {overall.content.substring(0, 100)}...
-                  </p>
+                    {overall.is_square_featured && (
+                      <button
+                        onClick={() => openCropEditor(overall)}
+                        className="mb-3 w-full border border-ink-line py-1.5 px-2 text-xs font-semibold text-bone-dim transition-colors hover:border-bone hover:text-bone"
+                      >
+                        Adjust Square Crop
+                      </button>
+                    )}
 
-                  {/* Featured controls */}
-                  <div className="flex gap-2 mb-3">
-                    <button
-                      onClick={() => handleHeroFeature(overall)}
-                      className={`flex-1 text-xs font-semibold py-1.5 px-2 rounded transition-colors ${
-                        overall.is_hero_featured
-                          ? 'bg-orange-500 text-white hover:bg-orange-600'
-                          : 'bg-gray-100 text-gray-700 hover:bg-orange-100 hover:text-orange-700'
-                      }`}
-                    >
-                      {overall.is_hero_featured ? 'Remove Hero' : 'Set Hero'}
-                    </button>
-                    <button
-                      onClick={() => handleSquareFeature(overall)}
-                      className={`flex-1 text-xs font-semibold py-1.5 px-2 rounded transition-colors ${
-                        overall.is_square_featured
-                          ? 'bg-blue-500 text-white hover:bg-blue-600'
-                          : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'
-                      }`}
-                    >
-                      {overall.is_square_featured ? 'Remove Square' : `Set Square (${squareFeaturedCount}/3)`}
-                    </button>
-                  </div>
-
-                  {/* Crop adjust buttons - only show if featured */}
-                  {overall.is_hero_featured && (
-                    <button
-                      onClick={() => openHeroCropEditor(overall)}
-                      className="w-full text-xs font-semibold py-1.5 px-2 rounded bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors mb-1"
-                    >
-                      Adjust Hero Crop (Left)
-                    </button>
-                  )}
-                  {overall.is_square_featured && (
-                    <button
-                      onClick={() => openCropEditor(overall)}
-                      className="w-full text-xs font-semibold py-1.5 px-2 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors mb-3"
-                    >
-                      Adjust Square Crop
-                    </button>
-                  )}
-
-                  <div className="flex justify-between items-center">
-                    <Link
-                      to={`/admin/overalls/edit/${overall.id}`}
-                      className="text-indigo-600 hover:text-indigo-800 font-medium"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(overall.id)}
-                      className="text-red-600 hover:text-red-800 font-medium"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex items-center justify-between border-t border-ink-line pt-3">
+                      <button
+                        onClick={() => navigate(`/admin/overalls/edit/${overall.id}`)}
+                        className="text-sm font-medium text-brand hover:text-bone"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(overall.id)}
+                        className="text-sm font-medium text-down hover:text-bone"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       {/* Hero Crop Adjustment Modal */}
       {heroCropModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg border border-ink-line bg-ink-soft p-6">
+            <h3 className="mb-1 text-lg font-bold text-bone">
               Adjust Hero Crop — {heroCropModal.overall.title}
             </h3>
-            <p className="text-xs text-gray-500 mb-4">
+            <p className="mb-4 text-xs text-bone-dim">
               Controls how the image appears in the large featured panel on the left of the homepage.
             </p>
 
             {/* Live Preview — portrait ratio to match actual hero layout */}
-            <div className="mb-4 border-2 border-orange-200 rounded overflow-hidden mx-auto" style={{ maxWidth: '200px' }}>
+            <div className="mx-auto mb-4 border border-brand/40 overflow-hidden" style={{ maxWidth: '200px' }}>
               <div className="relative overflow-hidden" style={{ aspectRatio: '10 / 11' }}>
                 <img
                   src={heroCropModal.overall.image_url}
                   alt={heroCropModal.overall.title}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   style={{
                     objectPosition: `${heroCropValues.hero_crop_x}% ${heroCropValues.hero_crop_y}%`,
                     transform: `scale(${heroCropValues.hero_crop_zoom / 100})`,
@@ -395,15 +368,15 @@ function OverallsList() {
                   }}
                 />
               </div>
-              <div className="text-center text-[10px] text-orange-600 font-semibold py-1 bg-orange-50">
+              <div className="bg-brand/10 py-1 text-center text-[10px] font-semibold text-brand">
                 Hero Preview (Left Panel)
               </div>
             </div>
 
             {/* Sliders */}
-            <div className="space-y-4 mb-6">
+            <div className="mb-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-bone-dim">
                   Horizontal Position: {heroCropValues.hero_crop_x}%
                 </label>
                 <input
@@ -412,9 +385,9 @@ function OverallsList() {
                   max="100"
                   value={heroCropValues.hero_crop_x}
                   onChange={(e) => setHeroCropValues({ ...heroCropValues, hero_crop_x: parseInt(e.target.value) })}
-                  className="w-full accent-orange-500"
+                  className="w-full accent-brand"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="flex justify-between text-[10px] text-bone-dim">
                   <span>Left</span>
                   <span>Center</span>
                   <span>Right</span>
@@ -422,7 +395,7 @@ function OverallsList() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-bone-dim">
                   Vertical Position: {heroCropValues.hero_crop_y}%
                 </label>
                 <input
@@ -431,9 +404,9 @@ function OverallsList() {
                   max="100"
                   value={heroCropValues.hero_crop_y}
                   onChange={(e) => setHeroCropValues({ ...heroCropValues, hero_crop_y: parseInt(e.target.value) })}
-                  className="w-full accent-orange-500"
+                  className="w-full accent-brand"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="flex justify-between text-[10px] text-bone-dim">
                   <span>Top</span>
                   <span>Center</span>
                   <span>Bottom</span>
@@ -441,7 +414,7 @@ function OverallsList() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-bone-dim">
                   Zoom: {heroCropValues.hero_crop_zoom}%
                 </label>
                 <input
@@ -450,9 +423,9 @@ function OverallsList() {
                   max="200"
                   value={heroCropValues.hero_crop_zoom}
                   onChange={(e) => setHeroCropValues({ ...heroCropValues, hero_crop_zoom: parseInt(e.target.value) })}
-                  className="w-full accent-orange-500"
+                  className="w-full accent-brand"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="flex justify-between text-[10px] text-bone-dim">
                   <span>Normal</span>
                   <span>2x Zoom</span>
                 </div>
@@ -463,13 +436,13 @@ function OverallsList() {
             <div className="flex gap-3">
               <button
                 onClick={() => setHeroCropModal(null)}
-                className="flex-1 py-2 px-4 rounded bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition-colors"
+                className="flex-1 border border-ink-line py-2 px-4 font-semibold text-bone-dim transition-colors hover:border-bone hover:text-bone"
               >
                 Cancel
               </button>
               <button
                 onClick={handleHeroCropSave}
-                className="flex-1 py-2 px-4 rounded bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors"
+                className="flex-1 border border-brand bg-brand py-2 px-4 font-semibold text-ink transition-colors hover:bg-brand-dim"
               >
                 Save Hero Crop
               </button>
@@ -480,17 +453,17 @@ function OverallsList() {
 
       {/* Square Crop Adjustment Modal */}
       {cropModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg border border-ink-line bg-ink-soft p-6">
+            <h3 className="mb-1 text-lg font-bold text-bone">
               Adjust Square Crop — {cropModal.overall.title}
             </h3>
-            <p className="text-xs text-gray-500 mb-4">
+            <p className="mb-4 text-xs text-bone-dim">
               Controls how the image appears in the small square panels on the home page.
             </p>
 
             {/* Live Preview */}
-            <div className="mb-4 border-2 border-gray-200 rounded overflow-hidden">
+            <div className="mb-4 border border-ink-line overflow-hidden">
               <div
                 className="relative overflow-hidden"
                 style={{
@@ -503,7 +476,7 @@ function OverallsList() {
                 <img
                   src={cropModal.overall.image_url}
                   alt={cropModal.overall.title}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   style={{
                     objectPosition: `${cropValues.crop_x}% ${cropValues.crop_y}%`,
                     transform: `scale(${cropValues.crop_zoom / 100})`,
@@ -514,9 +487,9 @@ function OverallsList() {
             </div>
 
             {/* Sliders */}
-            <div className="space-y-4 mb-6">
+            <div className="mb-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-bone-dim">
                   Horizontal Position: {cropValues.crop_x}%
                 </label>
                 <input
@@ -525,9 +498,9 @@ function OverallsList() {
                   max="100"
                   value={cropValues.crop_x}
                   onChange={(e) => setCropValues({ ...cropValues, crop_x: parseInt(e.target.value) })}
-                  className="w-full accent-orange-500"
+                  className="w-full accent-brand"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="flex justify-between text-[10px] text-bone-dim">
                   <span>Left</span>
                   <span>Center</span>
                   <span>Right</span>
@@ -535,7 +508,7 @@ function OverallsList() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-bone-dim">
                   Vertical Position: {cropValues.crop_y}%
                 </label>
                 <input
@@ -544,9 +517,9 @@ function OverallsList() {
                   max="100"
                   value={cropValues.crop_y}
                   onChange={(e) => setCropValues({ ...cropValues, crop_y: parseInt(e.target.value) })}
-                  className="w-full accent-orange-500"
+                  className="w-full accent-brand"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="flex justify-between text-[10px] text-bone-dim">
                   <span>Top</span>
                   <span>Center</span>
                   <span>Bottom</span>
@@ -554,7 +527,7 @@ function OverallsList() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-bone-dim">
                   Zoom: {cropValues.crop_zoom}%
                 </label>
                 <input
@@ -563,9 +536,9 @@ function OverallsList() {
                   max="200"
                   value={cropValues.crop_zoom}
                   onChange={(e) => setCropValues({ ...cropValues, crop_zoom: parseInt(e.target.value) })}
-                  className="w-full accent-orange-500"
+                  className="w-full accent-brand"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="flex justify-between text-[10px] text-bone-dim">
                   <span>Normal</span>
                   <span>2x Zoom</span>
                 </div>
@@ -576,7 +549,7 @@ function OverallsList() {
             <div className="flex gap-3">
               <button
                 onClick={() => setCropModal(null)}
-                className="flex-1 py-2 px-4 rounded bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition-colors"
+                className="flex-1 border border-ink-line py-2 px-4 font-semibold text-bone-dim transition-colors hover:border-bone hover:text-bone"
               >
                 Cancel
               </button>
@@ -586,7 +559,7 @@ function OverallsList() {
                     ? handleCropOnlySave
                     : handleCropSave
                 }
-                className="flex-1 py-2 px-4 rounded bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors"
+                className="flex-1 border border-brand bg-brand py-2 px-4 font-semibold text-ink transition-colors hover:bg-brand-dim"
               >
                 Save
               </button>
@@ -594,7 +567,7 @@ function OverallsList() {
           </div>
         </div>
       )}
-    </div>
+    </AdminLayout>
   );
 }
 

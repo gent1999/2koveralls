@@ -1,32 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
-import AttributeEditor, { DEFAULT_ATTRIBUTE_ROWS } from '../../components/admin/AttributeEditor';
-import ArticleLinker from '../../components/admin/ArticleLinker';
-
-const TIERS = [
-  { value: '', label: 'None' },
-  { value: 'mainstream', label: 'Mainstream' },
-  { value: 'rising', label: 'Rising' },
-  { value: 'underground', label: 'Underground' },
-  { value: 'legend', label: 'Legend' },
-];
+import ImageCropper from '../../components/ImageCropper';
 
 const inputClass = 'w-full border border-ink-line bg-ink px-3 py-2.5 text-sm text-bone placeholder-bone-dim focus:border-brand focus:outline-none';
 const labelClass = 'mb-2 block text-xs font-medium uppercase tracking-wide text-bone-dim';
 
-function OverallCreate() {
+function WriteupCreate() {
   const [admin, setAdmin] = useState(null);
   const [title, setTitle] = useState('');
-  const [overall, setOverall] = useState('');
+  const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState('');
+  const [category, setCategory] = useState('article');
   const [instagramLink, setInstagramLink] = useState('');
-  const [artistTier, setArtistTier] = useState('');
-  const [location, setLocation] = useState('');
-  const [attributeRows, setAttributeRows] = useState(DEFAULT_ATTRIBUTE_ROWS);
-  const [linkedArticleIds, setLinkedArticleIds] = useState([]);
   const [image, setImage] = useState(null);
+  const [thumbnail, setThumbnail] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState(null);
+  const [originalImage, setOriginalImage] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -54,10 +47,22 @@ function OverallCreate() {
       setImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
+        setOriginalImage(reader.result);
         setImagePreview(reader.result);
+        setShowCropper(true);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCropComplete = (croppedFile, croppedPreview) => {
+    setThumbnail(croppedFile);
+    setThumbnailPreview(croppedPreview);
+    setShowCropper(false);
+  };
+
+  const handleCropCancel = () => {
+    setShowCropper(false);
   };
 
   const handleSubmit = async (e) => {
@@ -71,38 +76,26 @@ function OverallCreate() {
       return;
     }
 
-    if (!image) {
-      setError('Please select an image');
-      setLoading(false);
-      return;
-    }
-
     try {
       const formData = new FormData();
       formData.append('title', title);
+      formData.append('author', author);
       formData.append('content', content);
-      formData.append('image', image);
-      if (overall) {
-        formData.append('overall', overall);
+      formData.append('category', category);
+      if (tags) {
+        formData.append('tags', tags);
       }
       if (instagramLink) {
         formData.append('instagram_link', instagramLink);
       }
-      if (artistTier) {
-        formData.append('artist_tier', artistTier);
+      if (image) {
+        formData.append('image', image);
       }
-      if (location) {
-        formData.append('location', location);
+      if (thumbnail) {
+        formData.append('thumbnail', thumbnail);
       }
-      const attributesObj = Object.fromEntries(
-        attributeRows.filter(r => r.label.trim() && r.value !== '').map(r => [r.label.trim(), Number(r.value)])
-      );
-      if (Object.keys(attributesObj).length > 0) {
-        formData.append('attributes', JSON.stringify(attributesObj));
-      }
-      formData.append('koveralls_article_ids', linkedArticleIds.join(','));
 
-      const response = await fetch(`${API_URL}/api/overalls`, {
+      const response = await fetch(`${API_URL}/api/koveralls-articles`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -112,10 +105,10 @@ function OverallCreate() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to create overall');
+        throw new Error(data.error || 'Failed to create article');
       }
 
-      navigate('/admin/overalls');
+      navigate('/admin/writeups');
     } catch (error) {
       setError(error.message);
     } finally {
@@ -127,17 +120,18 @@ function OverallCreate() {
     <AdminLayout
       admin={admin}
       onLogout={handleLogout}
-      title="Create New Overall"
+      title="Create New Article"
+      subtitle="Native 2koveralls write-up — shown in The Latest on the homepage"
       actions={
         <button
-          onClick={() => navigate('/admin/overalls')}
+          onClick={() => navigate('/admin/writeups')}
           className="border border-ink-line px-4 py-2 text-xs font-bold uppercase tracking-wider text-bone-dim transition-colors hover:border-bone hover:text-bone"
         >
           Back to List
         </button>
       }
     >
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-4xl">
         {error && (
           <div className="mb-4 border border-down/30 bg-down/10 px-4 py-3 text-sm text-down">
             {error}
@@ -154,46 +148,98 @@ function OverallCreate() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={inputClass}
-              placeholder="e.g., Kendrick Lamar"
+              placeholder="Article title"
             />
           </div>
 
           <div>
-            <label htmlFor="overall" className={labelClass}>Overall Rating</label>
+            <label htmlFor="author" className={labelClass}>Author</label>
             <input
-              type="number"
-              id="overall"
-              value={overall}
-              onChange={(e) => setOverall(e.target.value)}
-              min="0"
-              max="99"
+              type="text"
+              id="author"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
               className={inputClass}
-              placeholder="e.g., 99"
+              placeholder="Author name"
             />
-            <p className="mt-1 text-xs text-bone-dim">
-              Enter the 2K overall rating (0-99)
+          </div>
+
+          <div>
+            <label htmlFor="category" className={labelClass}>Category *</label>
+            <select
+              id="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className={inputClass}
+            >
+              <option value="article">Feature</option>
+              <option value="interview">Interview</option>
+              <option value="review">Review</option>
+              <option value="editorial">Editorial</option>
+              <option value="rating_update">Rating Update</option>
+              <option value="rankings">Rankings</option>
+            </select>
+            <p className="mt-2 text-xs text-bone-dim">
+              Shows up in The Latest on the homepage and can be linked as Related Coverage on an Overall.
             </p>
           </div>
 
           <div>
-            <label htmlFor="image" className={labelClass}>Overall Image *</label>
+            <label htmlFor="image" className={labelClass}>Cover Image</label>
             <input
               type="file"
               id="image"
               accept="image/*"
-              required
               onChange={handleImageChange}
               className={`${inputClass} file:mr-3 file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-xs file:font-bold file:uppercase file:text-ink`}
             />
             {imagePreview && (
-              <div className="mt-4">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="max-w-sm border border-ink-line"
-                />
+              <div className="mt-4 space-y-4">
+                <div>
+                  <p className="mb-1 text-xs text-bone-dim">Original (shown on article page):</p>
+                  <img
+                    src={imagePreview}
+                    alt="Original preview"
+                    className="max-w-md border border-ink-line"
+                  />
+                </div>
+                {thumbnailPreview && (
+                  <div>
+                    <p className="mb-1 text-xs text-bone-dim">Cropped thumbnail (shown on homepage):</p>
+                    <img
+                      src={thumbnailPreview}
+                      alt="Thumbnail preview"
+                      className="max-w-md border border-ink-line"
+                    />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOriginalImage(imagePreview);
+                    setShowCropper(true);
+                  }}
+                  className="text-sm font-medium text-brand hover:text-bone"
+                >
+                  {thumbnailPreview ? 'Re-crop thumbnail' : 'Crop thumbnail'}
+                </button>
               </div>
             )}
+          </div>
+
+          <div>
+            <label htmlFor="tags" className={labelClass}>Tags</label>
+            <input
+              type="text"
+              id="tags"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              className={inputClass}
+              placeholder="hip-hop, rap, news (comma separated)"
+            />
+            <p className="mt-1 text-xs text-bone-dim">
+              Separate tags with commas
+            </p>
           </div>
 
           <div>
@@ -207,61 +253,20 @@ function OverallCreate() {
               placeholder="https://www.instagram.com/p/..."
             />
             <p className="mt-1 text-xs text-bone-dim">
-              Link to the Instagram post for this overall
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="artistTier" className={labelClass}>Artist Tier</label>
-              <select
-                id="artistTier"
-                value={artistTier}
-                onChange={(e) => setArtistTier(e.target.value)}
-                className={inputClass}
-              >
-                {TIERS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-              <p className="mt-1 text-xs text-bone-dim">
-                Powers Board filters, Rookie Class, and Rankings views
-              </p>
-            </div>
-            <div>
-              <label htmlFor="location" className={labelClass}>Location</label>
-              <input
-                type="text"
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className={inputClass}
-                placeholder="e.g., Atlanta, GA"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className={labelClass}>Attributes</label>
-            <AttributeEditor rows={attributeRows} onChange={setAttributeRows} />
-            <p className="mt-1 text-xs text-bone-dim">
-              Shown on the hero and Overall detail page. Leave value blank to skip that attribute.
+              Link to the Instagram post for this article
             </p>
           </div>
 
           <div>
-            <label className={labelClass}>Related Coverage</label>
-            <ArticleLinker selectedIds={linkedArticleIds} onChange={setLinkedArticleIds} />
-          </div>
-
-          <div>
-            <label htmlFor="content" className={labelClass}>Content/Explanation *</label>
+            <label htmlFor="content" className={labelClass}>Content *</label>
             <textarea
               id="content"
               required
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={8}
+              rows={12}
               className={inputClass}
-              placeholder="Explain the rating and why this artist deserves this overall..."
+              placeholder="Article content (supports Markdown)..."
             />
             <p className="mt-2 text-xs text-bone-dim">
               Supports Markdown formatting
@@ -271,7 +276,7 @@ function OverallCreate() {
           <div className="flex justify-end gap-3">
             <button
               type="button"
-              onClick={() => navigate('/admin/overalls')}
+              onClick={() => navigate('/admin/writeups')}
               className="border border-ink-line px-4 py-2 text-xs font-bold uppercase tracking-wider text-bone-dim transition-colors hover:border-bone hover:text-bone"
             >
               Cancel
@@ -281,13 +286,23 @@ function OverallCreate() {
               disabled={loading}
               className="border border-brand bg-brand px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink transition-colors hover:bg-brand-dim disabled:opacity-50"
             >
-              {loading ? 'Creating...' : 'Create Overall'}
+              {loading ? 'Creating...' : 'Create Article'}
             </button>
           </div>
         </form>
       </div>
+
+      {/* Image Cropper Modal */}
+      {showCropper && originalImage && (
+        <ImageCropper
+          imageSrc={originalImage}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={16 / 9}
+        />
+      )}
     </AdminLayout>
   );
 }
 
-export default OverallCreate;
+export default WriteupCreate;
