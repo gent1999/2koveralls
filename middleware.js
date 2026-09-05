@@ -14,7 +14,7 @@ export default function middleware(request) {
   const siteUrl = 'https://www.2koveralls.com/';
   const title = '2koveralls - Underground Hip Hop News & 2K Rapper Ratings';
   const description = 'Your source for underground hip-hop news, 2K rapper overall ratings, exclusive interviews, and music culture. Stay updated with daily rap & hip-hop content.';
-  const image = 'https://www.2koveralls.com/banner_2k.png';
+  const image = 'https://www.2koveralls.com/2koveralls_banner.png';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -30,8 +30,8 @@ export default function middleware(request) {
   <meta property="og:description" content="${description}">
   <meta property="og:image" content="${image}">
   <meta property="og:image:type" content="image/png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
+  <meta property="og:image:width" content="1672">
+  <meta property="og:image:height" content="941">
   <meta property="og:site_name" content="2koveralls">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="${siteUrl}">

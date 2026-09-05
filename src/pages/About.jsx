@@ -43,7 +43,7 @@ export default function About() {
 
             <h2 className="text-2xl font-bold mt-8 mb-4 text-bone">Stay Connected</h2>
             <p>
-              Follow us on Instagram <a href="https://www.instagram.com/2k_overalls" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-bone font-medium">@2k_overalls</a> for daily updates and the latest ratings.
+              Follow us on Instagram <a href="https://www.instagram.com/2koveralls" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-bone font-medium">@2koveralls</a> for daily updates and the latest ratings.
             </p>
 
             <p>

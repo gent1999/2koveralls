@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL;
-const INSTAGRAM_URL = 'https://www.instagram.com/2k_overalls';
+const INSTAGRAM_URL = 'https://www.instagram.com/2koveralls';
 
 const InstagramIcon = ({ className }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
