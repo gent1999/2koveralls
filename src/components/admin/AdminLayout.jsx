@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import logo from '../../assets/logo_2k.png';
+import logo from '../../assets/logo_2koveralls.png';
 import { Icon } from './ui';
 
 // Each item's `match` decides whether it highlights for the current path —

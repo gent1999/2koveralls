@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import logo from '../assets/logo_2k.png';
+import logo from '../assets/logo_2koveralls.png';
 
 const LINKS = [
   { to: '/about', label: 'About' },

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../../assets/logo_2k.png';
+import logo from '../../assets/logo_2koveralls.png';
 
 function AdminLogin() {
   const [email, setEmail] = useState('');

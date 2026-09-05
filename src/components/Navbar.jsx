@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo_2k.png';
+import logo from '../assets/logo_2koveralls.png';
 import { generateNewsUrl } from '../utils/slugify';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -115,8 +115,9 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-brand bg-ink">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          <Link to="/" className="flex flex-shrink-0 items-center">
+          <Link to="/" className="flex flex-shrink-0 items-center gap-2">
             <img src={logo} alt="2K Overalls" className="h-9 md:h-10" />
+            <span className="font-display text-lg uppercase tracking-wide text-bone sm:text-xl">2K Overalls</span>
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
